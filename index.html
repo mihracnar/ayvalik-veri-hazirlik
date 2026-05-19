@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yapı Envanteri — Ayvalık</title>
+<link rel="icon" href="data:,">
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Public+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <h1>Yapı <em>Envanteri</em></h1>
+      <span class="sub">Ayvalık</span>
+    </div>
+    <div class="progress">
+      <span class="label">Ort. doluluk</span>
+      <span class="pct" id="global-pct">—</span>
+      <span class="bar">
+        <span id="bar-complete" style="background:var(--accent-2)"></span>
+        <span id="bar-partial"  style="background:var(--amber)"></span>
+        <span id="bar-empty"    style="background:var(--rust)"></span>
+      </span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="card accent-edge">
+    <div class="card-head">
+      <div class="eyebrow">Adım 1</div>
+      <h2>Yapı seç</h2>
+      <p class="hint">Yapı No, Ada, Parsel veya Adres ile arayın. Yeşil = tam, sarı = eksik, kırmızı = hiç girilmemiş.</p>
+    </div>
+    <div class="card-body">
+      <div class="picker-wrap">
+        <div class="picker">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0;margin-left:13px;color:var(--muted)">
+            <circle cx="7" cy="7" r="5"/><path d="m11 11 3 3" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="search" placeholder="Yapı No, Ada No, Parsel No..." autocomplete="off">
+          <button class="clear-btn" id="clear-btn" style="display:none">×</button>
+        </div>
+        <div class="dropdown" id="dropdown"></div>
+      </div>
+      <div class="status-row">
+        <span class="mode-pill" id="mode-pill">
+          <span class="dot"></span>
+          <span id="mode-text">Yükleniyor…</span>
+        </span>
+        <span class="loaded-badge" id="loaded-count"></span>
+      </div>
+    </div>
+  </section>
+
+  <div id="record-view">
+    <section class="card">
+      <div class="empty-state">
+        <div class="glyph">¶</div>
+        <h3>Henüz yapı seçilmedi</h3>
+        <p>Yukarıdan bir Yapı No seçin. Harita o parsele odaklanacak, Sheets'teki öznitelikler formda açılacak.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/map.js"></script>
+<script src="js/form.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
