@@ -72,16 +72,21 @@ const FormModule = {
 
     // Fotoğraf
     if (field.type === 'file') {
-      // https:// URL'lerde img göster (Drive vb.) — lokal yolları sadece metin olarak göster
-      const isUrl = value && /^https?:\/\//.test(value);
+      // Kaynak: https URL → direkt; diğer → photos/ klasöründen dosya adıyla
+      // "556" → photos/556.jpg | "556.jpg" → photos/556.jpg | URL → URL
+      const buildSrc = (v) => {
+        if (!v) return '';
+        if (/^https?:\/\//.test(v)) return v;
+        const name = v.replace(/^.*[\/\\]/, ''); // başındaki yolu temizle
+        return CONFIG.photoFolder + (name.includes('.') ? name : name + '.jpg');
+      };
+      const src = buildSrc(value);
       const previewHTML = !value
         ? `<span class="preview-placeholder">Fotoğraf seçilmedi</span>`
-        : isUrl
-          ? `<img src="${this._esc(value)}" alt="fotoğraf"
-                 style="max-width:100%;max-height:260px;object-fit:contain;display:block"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-             <span class="preview-placeholder" style="display:none">📎 Yüklenemedi: ${this._esc(value)}</span>`
-          : `<span class="preview-placeholder">📎 ${this._esc(value)}</span>`;
+        : `<img src="${this._esc(src)}" alt="fotoğraf"
+               style="max-width:100%;max-height:260px;object-fit:contain;display:block"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+           <span class="preview-placeholder" style="display:none">📎 ${this._esc(value)}</span>`;
       return `<div class="field field-file">
         <span class="field-label">${field.label}</span>
         <div class="photo-area">

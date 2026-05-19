@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yapı Envanteri — Ayvalık</title>
 <link rel="icon" href="data:,">
-
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Public+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
@@ -31,16 +30,18 @@
 </header>
 
 <main>
+
+  <!-- Arama -->
   <section class="card accent-edge">
     <div class="card-head">
-      <div class="eyebrow">Adım 1</div>
       <h2>Yapı seç</h2>
-      <p class="hint">Yapı No, Ada, Parsel veya Adres ile arayın. Yeşil = tam, sarı = eksik, kırmızı = hiç girilmemiş.</p>
+      <p class="hint">Yapı No, Ada, Parsel veya Adres ile arayın — ya da haritada tıklayın.</p>
     </div>
     <div class="card-body">
       <div class="picker-wrap">
         <div class="picker">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0;margin-left:13px;color:var(--muted)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+               style="flex-shrink:0;margin-left:13px;color:var(--muted)">
             <circle cx="7" cy="7" r="5"/><path d="m11 11 3 3" stroke-linecap="round"/>
           </svg>
           <input type="text" id="search" placeholder="Yapı No, Ada No, Parsel No..." autocomplete="off">
@@ -49,25 +50,78 @@
         <div class="dropdown" id="dropdown"></div>
       </div>
       <div class="status-row">
-        <span class="mode-pill" id="mode-pill">
-          <span class="dot"></span>
-          <span id="mode-text">Yükleniyor…</span>
-        </span>
+        <span class="mode-pill" id="mode-pill"><span class="dot"></span><span id="mode-text">Yükleniyor…</span></span>
         <span class="loaded-badge" id="loaded-count"></span>
       </div>
     </div>
   </section>
 
-  <div id="record-view">
-    <section class="card">
-      <div class="empty-state">
-        <div class="glyph">¶</div>
-        <h3>Henüz yapı seçilmedi</h3>
-        <p>Yukarıdan bir Yapı No seçin. Harita o parsele odaklanacak, Sheets'teki öznitelikler formda açılacak.</p>
+  <!-- Filtre -->
+  <section class="card filter-card" id="filter-panel">
+    <div class="filter-head">
+      <span class="filter-label">Filtre</span>
+      <span class="filter-count-badge" id="filter-count">— yapı</span>
+      <button class="filter-clear-btn" id="filter-clear" style="display:none">Temizle ×</button>
+      <button class="filter-collapse-btn" id="filter-collapse" onclick="
+        const b=document.getElementById('filter-body');
+        const c=document.getElementById('filter-collapse');
+        b.classList.toggle('collapsed');
+        c.textContent=b.classList.contains('collapsed')?'▸':'▾';
+      ">▾</button>
+    </div>
+    <div class="filter-body" id="filter-body">
+      <div class="filter-group">
+        <span class="filter-group-label">Yapı Durumu</span>
+        <div class="filter-pills" data-group="cs"></div>
       </div>
-    </section>
+      <div class="filter-group">
+        <span class="filter-group-label">Kullanım</span>
+        <div class="filter-pills" data-group="ut"></div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Koruma</span>
+        <div class="filter-pills" data-group="cv"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Harita — her zaman görünür -->
+  <section class="card">
+    <div class="card-head" id="map-head">
+      <h2 id="rec-title">Ayvalık Yapı Envanteri</h2>
+      <p class="hint" id="map-hint">Bir yapıya tıklayarak seçin, bilgiler aşağıda açılır.</p>
+    </div>
+    <div id="map" class="mini-map"></div>
+    <div class="map-meta" id="map-meta" style="visibility:hidden">
+      <span class="mono" id="rec-id">—</span>
+      <span class="completion-row">
+        <span class="bar-wrap"><span id="comp-bar"></span></span>
+        <span class="comp-pct" id="comp-pct">—</span>
+      </span>
+    </div>
+  </section>
+
+  <!-- Form alanı -->
+  <div id="record-view">
+    <section class="card"><div class="empty-state">
+      <div class="glyph">¶</div>
+      <h3>Yapı seçilmedi</h3>
+      <p>Haritada veya yukarıdaki arama kutusundan bir yapı seçin.</p>
+    </div></section>
   </div>
+
 </main>
+
+      <button id="btn-bulk-close" class="bulk-close-btn">×</button>
+    </div>
+    <div class="bulk-modal-body" id="bulk-modal-body"></div>
+    <div class="bulk-modal-foot">
+      <button id="btn-bulk-cancel" class="btn-secondary">İptal</button>
+      <button id="btn-bulk-apply" class="btn-primary">Uygula</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -78,6 +132,5 @@
 <script src="js/map.js"></script>
 <script src="js/form.js"></script>
 <script src="js/app.js"></script>
-
 </body>
 </html>

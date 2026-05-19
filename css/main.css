@@ -488,3 +488,297 @@ main {
   background: rgba(181,74,54,.08);
   border-color: var(--rust);
 }
+
+/* ── Filter panel ────────────────────────────────────────────── */
+.filter-card { padding: 0; }
+.filter-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.filter-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.filter-count-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-2);
+  background: var(--border-soft);
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.filter-clear-btn {
+  font: inherit; font-size: 11px;
+  background: rgba(181,74,54,.1); color: var(--rust);
+  border: 1px solid rgba(181,74,54,.25); border-radius: 99px;
+  padding: 3px 10px; cursor: pointer; margin-left: auto;
+  transition: all .15s;
+}
+.filter-clear-btn:hover { background: rgba(181,74,54,.18); }
+.filter-collapse-btn {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 13px; padding: 0 4px;
+}
+
+.filter-body {
+  padding: 12px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all .2s;
+}
+.filter-body.collapsed { display: none; }
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-group-label {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.filter-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.fpill {
+  font: inherit; font-size: 11px; font-weight: 500;
+  padding: 4px 10px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--tint); color: var(--ink-2);
+  transition: all .15s;
+}
+.fpill:hover { background: var(--bg); }
+.fpill.active {
+  background: var(--ink); color: white; border-color: var(--ink);
+}
+
+/* ── Bulk edit toggle button ─────────────────────────────────── */
+.btn-bulk-toggle {
+  font: inherit; font-size: 11px; font-weight: 500;
+  padding: 4px 12px; border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--tint); color: var(--ink-2);
+  cursor: pointer; transition: all .15s; margin-left: auto;
+}
+.btn-bulk-toggle:hover  { background: var(--bg); }
+.btn-bulk-toggle.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+/* ── Bulk bar ─────────────────────────────────────────────────── */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: var(--tint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+#bulk-count {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* Bulk mode dropdown checkboxes */
+.dd-opt-bulk { gap: 8px; }
+.bulk-check { accent-color: var(--ink); cursor: pointer; }
+.dd-opt-bulk.bulk-selected { background: rgba(26,22,18,0.06); }
+
+/* ── Bulk modal ───────────────────────────────────────────────── */
+.bulk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,22,18,0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.bulk-modal {
+  background: white;
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px -12px rgba(0,0,0,.3);
+  overflow: hidden;
+}
+.bulk-modal-head {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.bulk-modal-head h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+.bulk-modal-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
+.bulk-close-btn {
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; line-height: 1; padding: 0;
+}
+.bulk-modal-body {
+  flex: 1; overflow-y: auto;
+  padding: 16px 24px;
+}
+.bulk-hint {
+  font-size: 12px; color: var(--muted); margin-bottom: 16px;
+  padding: 10px 14px; background: var(--tint); border-radius: 5px;
+  border: 1px solid var(--border-soft);
+}
+.bulk-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 500px) { .bulk-fields { grid-template-columns: 1fr; } }
+.bulk-modal-foot {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Map controls ─────────────────────────────────────────────── */
+.color-toggle {
+  position: absolute;
+  bottom: 42px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.cm-btn {
+  font: inherit; font-size: 11px; font-weight: 500;
+  padding: 5px 10px; border: none;
+  background: white; color: var(--muted);
+  cursor: pointer; transition: all .15s;
+}
+.cm-btn:hover  { background: var(--bg); color: var(--ink); }
+.cm-btn.active { background: var(--ink); color: white; }
+.cm-btn + .cm-btn { border-left: 1px solid var(--border); }
+
+/* ── Map legend ───────────────────────────────────────────────── */
+.map-legend {
+  position: absolute;
+  bottom: 78px;
+  left: 10px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--ink-2);
+  padding: 2px 0;
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Map reset button ────────────────────────────────────────── */
+.map-reset-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  background: rgba(181,74,54,.1);
+  border: 1px solid rgba(181,74,54,.35);
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rust);
+  box-shadow: var(--shadow);
+  transition: all .15s;
+}
+.map-reset-btn:hover {
+  background: var(--rust);
+  color: white;
+  border-color: var(--rust);
+}
+
+/* ── Mobile responsive ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  .topbar-inner { padding: 10px 14px; gap: 8px; }
+  .brand h1     { font-size: 17px; }
+  .brand .sub   { display: none; }
+  .topbar .progress .bar   { display: none; }
+  .topbar .progress .label { display: none; }
+  .topbar .progress .pct   { font-size: 15px; }
+
+  main { padding: 14px 10px 80px; }
+  .card-body, .card-head { padding-left: 14px; padding-right: 14px; }
+  .map-meta { padding: 10px 14px; }
+
+  .fpill   { font-size: 10px; padding: 3px 8px; }
+  .filter-head { padding: 10px 14px; }
+  .filter-body { padding: 10px 14px 12px; gap: 8px; }
+
+  .savebar { padding: 10px 14px; border-radius: 6px; bottom: 10px; }
+  .btn-primary, .btn-secondary { padding: 8px 14px; font-size: 12px; }
+
+  .basemap-toggle { top: 8px; right: 8px; }
+  .color-toggle   { bottom: 40px; right: 8px; }
+  .map-reset-btn  { bottom: 8px; left: 8px; }
+  .map-legend     { bottom: 68px; left: 8px; font-size: 10px; padding: 6px 10px; }
+  .legend-dot     { width: 8px; height: 8px; }
+
+  .status-row { flex-wrap: wrap; gap: 6px; }
+  .loaded-badge { font-size: 10px; }
+}
+
+/* ── Ada/Parsel meta badges ──────────────────────────────────── */
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--tint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-right: 5px;
+}
+.meta-badge strong {
+  font-weight: 600;
+  color: var(--ink-2);
+}
