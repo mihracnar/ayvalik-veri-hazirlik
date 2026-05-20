@@ -678,11 +678,15 @@ main {
   .savebar { padding: 10px 14px; border-radius: 6px; bottom: 10px; }
   .btn-primary, .btn-secondary { padding: 8px 14px; font-size: 12px; }
 
-  .basemap-toggle { top: 8px; right: 8px; }
-  .color-toggle   { bottom: 40px; right: 8px; }
-  .map-reset-btn  { bottom: 8px; left: 8px; }
-  .map-legend     { bottom: 68px; left: 8px; font-size: 10px; padding: 6px 10px; }
-  .legend-dot     { width: 8px; height: 8px; }
+  /* Harita butonları — masaüstüyle tutarlı, sadece marjlar küçüldü */
+  .basemap-toggle      { top: 8px; right: 8px; }
+  .layer-toggle-single { top: 8px; right: 120px; }
+  .color-toggle        { bottom: 8px; right: 8px; }
+  .map-reset-btn       { bottom: 8px; left: 8px; }
+  .map-geo-btn         { bottom: 8px; left: 44px; }
+  .map-extent-btn      { bottom: 8px; left: 80px; }
+  .map-legend          { bottom: 44px; left: 8px; font-size: 10px; padding: 6px 10px; }
+  .legend-dot          { width: 8px; height: 8px; }
 
   .status-row { flex-wrap: wrap; gap: 6px; }
   .loaded-badge { font-size: 10px; }
