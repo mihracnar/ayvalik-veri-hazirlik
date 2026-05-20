@@ -22,6 +22,7 @@ const MapModule = {
       container,
       style: {
         version: 8,
+        glyphs: 'https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf',
         sources: {
           carto: {
             type: 'raster',
@@ -53,6 +54,13 @@ const MapModule = {
   _onLoad() {
     const m = this.map;
 
+    // 1. ALTTA — Halihazır harita (polyline)
+    m.addSource('halihazir', { type:'geojson', data:'./data/halihazir.geojson' });
+    m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
+      paint:{ 'line-color':'#c0392b', 'line-width':0.8, 'line-opacity':0.7 }
+    });
+
+    // 2. ORTADA — Yapı poligonları
     m.addSource('all-yapi', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
     m.addLayer({ id:'all-fill', type:'fill', source:'all-yapi', paint:{
       'fill-color': this._colorExpr('cv'),
@@ -75,6 +83,35 @@ const MapModule = {
       paint:{ 'fill-color':'#c08a2e', 'fill-opacity':0.45 }});
 
     requestAnimationFrame(() => this._loadAllFeatures());
+
+    // 3. ÜSTTE — Yapı No noktaları + label
+    m.addSource('yapino', { type:'geojson', data:'./data/yapino.geojson' });
+    m.addLayer({ id:'yapino-point', type:'circle', source:'yapino',
+      paint:{
+        'circle-radius': 3,
+        'circle-color': '#c0392b',
+        'circle-opacity': 0.8,
+        'circle-stroke-width': 0,
+      }
+    });
+    m.addLayer({ id:'yapino-label', type:'symbol', source:'yapino',
+      minzoom: 17,
+      layout:{
+        'text-field': ['get', 'Yapı No_Text'],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 10,
+        'text-offset': [0, 1.1],
+        'text-anchor': 'top',
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+      },
+      paint:{
+        'text-color': '#c0392b',
+        'text-opacity': 0.75,
+        'text-halo-color': 'rgba(255,255,255,0.85)',
+        'text-halo-width': 1.5,
+      }
+    });
     if (App.state.selectedId) { this._applySelection(App.state.selectedId); this._flyTo(App.state.selectedId); }
 
     m.on('click', 'all-fill', (e) => {
@@ -260,6 +297,53 @@ const MapModule = {
       // Attribute formu da kapat
       if (typeof App !== 'undefined') App.clearSelection();
     });
+
+    // Konum butonu
+    const og = c.querySelector('.map-geo-btn'); if(og) og.remove();
+    const gb = document.createElement('button');
+    gb.className = 'map-geo-btn';
+    gb.title = 'Konumumu göster';
+    gb.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <circle cx="7" cy="7" r="2.4" fill="currentColor" stroke="none"/>
+      <circle cx="7" cy="7" r="5.2"/>
+      <line x1="7" y1="1" x2="7" y2="2.4"/>
+      <line x1="7" y1="11.6" x2="7" y2="13"/>
+      <line x1="1" y1="7" x2="2.4" y2="7"/>
+      <line x1="11.6" y1="7" x2="13" y2="7"/>
+    </svg>`;
+    c.appendChild(gb);
+    gb.addEventListener('click', () => {
+      if (!navigator.geolocation) return;
+      gb.style.opacity = '0.4';
+      navigator.geolocation.getCurrentPosition(pos => {
+        gb.style.opacity = '';
+        gb.classList.add('active');
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const fc = { type:'Feature', geometry:{ type:'Point', coordinates:[lng,lat] }, properties:{} };
+        if (this.map.getSource('user-loc')) {
+          this.map.getSource('user-loc').setData(fc);
+        } else {
+          this.map.addSource('user-loc', { type:'geojson', data: fc });
+          this.map.addLayer({ id:'user-loc-halo', type:'circle', source:'user-loc',
+            paint:{ 'circle-radius':14, 'circle-color':'#2196F3', 'circle-opacity':0.2 }});
+          this.map.addLayer({ id:'user-loc-dot', type:'circle', source:'user-loc',
+            paint:{ 'circle-radius':7, 'circle-color':'#2196F3',
+                    'circle-stroke-width':2.5, 'circle-stroke-color':'white' }});
+        }
+        this.map.flyTo({ center:[lng,lat], zoom:17, duration:900 });
+      }, () => { gb.style.opacity = ''; });
+    });
+
+    // Tüm alana dön (extent) butonu
+    const oe = c.querySelector('.map-extent-btn'); if(oe) oe.remove();
+    const eb = document.createElement('button');
+    eb.className = 'map-extent-btn';
+    eb.title = 'Tüm alana dön';
+    eb.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 5V2h3M10 2h3v3M13 9v3h-3M4 12H1V9"/>
+    </svg>`;
+    c.appendChild(eb);
+    eb.addEventListener('click', () => this.resetView());
   },
 
   // ── Geometry utilities ───────────────────────────────────────

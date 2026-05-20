@@ -166,6 +166,12 @@ const App = {
     const fields = FormModule.collect(formArea);
     const photoFile = FormModule.getPhotoFile();
 
+    // Değişiklik yoksa kaydetme
+    if (!Object.keys(fields).length && !photoFile) {
+      this.toast('Değişiklik yok — kaydetme iptal edildi.', 'error');
+      return;
+    }
+
     this.state.saving = true;
     const btn = document.getElementById('btn-save');
     if (btn) { btn.disabled=true; btn.textContent='Kaydediliyor…'; }

@@ -95,5 +95,20 @@ const API = {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  }
+  },
+
+  // Drive'dan dosya adıyla thumbnail URL çöz
+  async resolvePhotoUrl(filename) {
+    if (!CONFIG.appsScriptUrl || !filename) return null;
+    if (/^https?:\/\//.test(filename)) return filename; // zaten URL
+    try {
+      const resp = await fetch(CONFIG.appsScriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'getPhotoUrl', filename })
+      });
+      const data = await resp.json();
+      return data.ok ? data.url : null;
+    } catch(e) { return null; }
+  },
 };

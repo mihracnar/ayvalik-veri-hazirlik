@@ -718,8 +718,8 @@ main {
   z-index: 10;
   width: 30px;
   height: 30px;
-  background: rgba(181,74,54,.1);
-  border: 1px solid rgba(181,74,54,.35);
+  background: white;
+  border: 1px solid var(--border);
   border-radius: 5px;
   cursor: pointer;
   display: flex;
@@ -730,9 +730,8 @@ main {
   transition: all .15s;
 }
 .map-reset-btn:hover {
-  background: var(--rust);
-  color: white;
-  border-color: var(--rust);
+  background: rgba(181,74,54,.08);
+  border-color: rgba(181,74,54,.4);
 }
 
 /* ── Mobile responsive ───────────────────────────────────────── */
@@ -782,3 +781,46 @@ main {
   font-weight: 600;
   color: var(--ink-2);
 }
+
+/* ── Geo/konum butonu ────────────────────────────────────────── */
+.map-geo-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 48px;   /* reset butonunun sağında (10 + 30 + 8) */
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  box-shadow: var(--shadow);
+  transition: all .15s;
+}
+.map-geo-btn:hover { background: #e3f2fd; color: #1565C0; border-color: #90CAF9; }
+.map-geo-btn.active { background: #2196F3; color: white; border-color: #2196F3; }
+
+/* ── Extent/tüm alana dön butonu ────────────────────────────── */
+.map-extent-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 86px;   /* reset(10) + geo(48) + 8gap */
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  box-shadow: var(--shadow);
+  transition: all .15s;
+}
+.map-extent-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
