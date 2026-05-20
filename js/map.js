@@ -313,7 +313,15 @@ const MapModule = {
     </svg>`;
     c.appendChild(gb);
     gb.addEventListener('click', () => {
-      if (!navigator.geolocation) return;
+      if (!navigator.geolocation) {
+        if (typeof App !== 'undefined') App.toast('Tarayıcı konum desteklemiyor', 'error');
+        return;
+      }
+      // HTTPS kontrolü — mobilde http'de çalışmaz
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        if (typeof App !== 'undefined') App.toast('Konum için HTTPS gerekli — GitHub Pages üzerinden açın', 'error');
+        return;
+      }
       gb.style.opacity = '0.4';
       navigator.geolocation.getCurrentPosition(pos => {
         gb.style.opacity = '';
@@ -331,7 +339,13 @@ const MapModule = {
                     'circle-stroke-width':2.5, 'circle-stroke-color':'white' }});
         }
         this.map.flyTo({ center:[lng,lat], zoom:17, duration:900 });
-      }, () => { gb.style.opacity = ''; });
+      }, (err) => {
+        gb.style.opacity = '';
+        const msg = err.code === 1 ? 'Konum izni reddedildi'
+                  : err.code === 2 ? 'Konum alınamadı'
+                  : 'Konum zaman aşımı';
+        if (typeof App !== 'undefined') App.toast(msg, 'error');
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     });
 
     // Tüm alana dön (extent) butonu
