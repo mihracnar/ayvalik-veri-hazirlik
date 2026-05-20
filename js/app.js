@@ -108,7 +108,7 @@ const App = {
     if (mapHint)  mapHint.innerHTML =
       `<span class="meta-badge">Ada <strong>${attrs.AdaNO||'—'}</strong></span>` +
       `<span class="meta-badge">Parsel <strong>${attrs.ParselNO||'—'}</strong></span>`;
-    if (mapMeta)  mapMeta.style.visibility = 'visible';
+    if (mapMeta)  mapMeta.style.display = '';
 
     // Haritayı uçur
     MapModule.flyTo(id);
@@ -154,7 +154,7 @@ const App = {
     const mapMeta  = document.getElementById('map-meta');
     const mapHint  = document.getElementById('map-hint');
     if (recTitle) recTitle.textContent = 'Ayvalık Yapı Envanteri';
-    if (mapMeta)  mapMeta.style.visibility = 'hidden';
+    if (mapMeta)  mapMeta.style.display = 'none';
     if (mapHint)  mapHint.textContent  = 'Bir yapıya tıklayarak seçin, bilgiler aşağıda açılır.';
   },
 

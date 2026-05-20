@@ -57,6 +57,7 @@ const MapModule = {
     // 1. ALTTA — Halihazır harita (polyline)
     m.addSource('halihazir', { type:'geojson', data:'./data/halihazir.geojson' });
     m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
+      layout:{ 'visibility':'none' },
       paint:{ 'line-color':'#c0392b', 'line-width':0.8, 'line-opacity':0.7 }
     });
 
@@ -87,6 +88,7 @@ const MapModule = {
     // 3. ÜSTTE — Yapı No noktaları + label
     m.addSource('yapino', { type:'geojson', data:'./data/yapino.geojson' });
     m.addLayer({ id:'yapino-point', type:'circle', source:'yapino',
+      layout:{ 'visibility':'none' },
       paint:{
         'circle-radius': 3,
         'circle-color': '#c0392b',
@@ -97,6 +99,7 @@ const MapModule = {
     m.addLayer({ id:'yapino-label', type:'symbol', source:'yapino',
       minzoom: 17,
       layout:{
+        'visibility': 'none',
         'text-field': ['get', 'Yapı No_Text'],
         'text-font': ['Noto Sans Regular'],
         'text-size': 10,
@@ -250,6 +253,151 @@ const MapModule = {
 
   _addControls() {
     const c = this.map.getContainer();
+    ['basemap-toggle','color-toggle','map-reset-btn','map-geo-btn',
+     'map-extent-btn','layer-toggle-single','map-ctrl-tr','map-ctrl-br','map-ctrl-bl']
+      .forEach(cls => { const el = c.querySelector('.'+cls); if(el) el.remove(); });
+
+    // ── Sağ üst grubu (Katmanlar + Harita/Uydu) ──────────────
+    const tr = document.createElement('div');
+    tr.className = 'map-ctrl-tr';
+    c.appendChild(tr);
+
+    // Katmanlar toggle
+    const lb = document.createElement('button');
+    lb.className = 'mcb layer-toggle-single active';
+    lb.title = 'Halihazır & Yapı No katmanlarını aç/kapat';
+    lb.textContent = 'Katmanlar';
+    tr.appendChild(lb);
+    lb.addEventListener('click', () => {
+      const isActive = lb.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
+      });
+    });
+
+    // Harita/Uydu toggle
+    const bm = document.createElement('div');
+    bm.className = 'mcg';
+    bm.innerHTML = `<button data-bm="carto"     class="mcb active">Harita</button>
+                    <button data-bm="satellite" class="mcb">Uydu</button>`;
+    tr.appendChild(bm);
+    bm.addEventListener('click', e => {
+      const btn = e.target.closest('.mcb[data-bm]'); if (!btn) return;
+      bm.querySelectorAll('.mcb').forEach(b => b.classList.toggle('active', b===btn));
+      this.map.setLayoutProperty('carto-layer',     'visibility', btn.dataset.bm==='carto'?'visible':'none');
+      this.map.setLayoutProperty('satellite-layer', 'visibility', btn.dataset.bm==='satellite'?'visible':'none');
+    });
+
+    // ── Sağ alt (Koruma/Durum) ────────────────────────────────
+    const br = document.createElement('div');
+    br.className = 'map-ctrl-br mcg';
+    br.innerHTML = `<button data-cm="cv" class="mcb active">Koruma</button>
+                    <button data-cm="cs" class="mcb">Durum</button>`;
+    c.appendChild(br);
+    br.addEventListener('click', e => {
+      const btn = e.target.closest('.mcb[data-cm]'); if (!btn) return;
+      this._colorMode = btn.dataset.cm;
+      br.querySelectorAll('.mcb').forEach(b => b.classList.toggle('active', b===btn));
+      this.refreshDisplay(App.state.activeFilterIds || null);
+      this.renderLegend(this._colorMode);
+    });
+
+    // ── Sol alt grubu (Reset + Konum + Extent) ────────────────
+    const bl = document.createElement('div');
+    bl.className = 'map-ctrl-bl';
+    c.appendChild(bl);
+
+    // Reset
+    const rb = document.createElement('button');
+    rb.className = 'mci reset';
+    rb.title = 'Seçimi sıfırla';
+    rb.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 4.5V1h3.5M8.5 1H12v3.5M12 8.5V12H8.5M4.5 12H1V8.5"/>
+      <rect x="4" y="4" width="5" height="5" rx="0.5"/>
+    </svg>`;
+    bl.appendChild(rb);
+    rb.addEventListener('click', () => {
+      const src = this.map && this.map.getSource('sel-yapi');
+      if (src) src.setData({ type:'FeatureCollection', features:[] });
+      if (typeof App !== 'undefined') App.clearSelection();
+    });
+
+    // Konum
+    const gb = document.createElement('button');
+    gb.className = 'mci';
+    gb.title = 'Konumumu göster';
+    gb.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <circle cx="6.5" cy="6.5" r="2.2" fill="currentColor" stroke="none"/>
+      <circle cx="6.5" cy="6.5" r="4.8"/>
+      <line x1="6.5" y1="1" x2="6.5" y2="2.3"/>
+      <line x1="6.5" y1="10.7" x2="6.5" y2="12"/>
+      <line x1="1" y1="6.5" x2="2.3" y2="6.5"/>
+      <line x1="10.7" y1="6.5" x2="12" y2="6.5"/>
+    </svg>`;
+    bl.appendChild(gb);
+    gb.addEventListener('click', () => {
+      if (!navigator.geolocation) { if(typeof App!=='undefined') App.toast('Konum desteklenmiyor','error'); return; }
+      if (location.protocol!=='https:' && location.hostname!=='localhost' && location.hostname!=='127.0.0.1') {
+        if(typeof App!=='undefined') App.toast('Konum için HTTPS gerekli','error'); return;
+      }
+      gb.style.opacity = '0.4';
+      navigator.geolocation.getCurrentPosition(pos => {
+        gb.style.opacity = ''; gb.classList.add('active');
+        const { latitude:lat, longitude:lng } = pos.coords;
+        const fc = { type:'Feature', geometry:{ type:'Point', coordinates:[lng,lat] }, properties:{} };
+        if (this.map.getSource('user-loc')) { this.map.getSource('user-loc').setData(fc); }
+        else {
+          this.map.addSource('user-loc', { type:'geojson', data:fc });
+          this.map.addLayer({ id:'user-loc-halo', type:'circle', source:'user-loc',
+            paint:{ 'circle-radius':14, 'circle-color':'#2196F3', 'circle-opacity':0.2 }});
+          this.map.addLayer({ id:'user-loc-dot', type:'circle', source:'user-loc',
+            paint:{ 'circle-radius':7, 'circle-color':'#2196F3',
+                    'circle-stroke-width':2.5, 'circle-stroke-color':'white' }});
+        }
+        this.map.flyTo({ center:[lng,lat], zoom:17, duration:900 });
+      }, err => {
+        gb.style.opacity='';
+        const msg = err.code===1?'Konum izni reddedildi':err.code===2?'Konum alınamadı':'Konum zaman aşımı';
+        if(typeof App!=='undefined') App.toast(msg,'error');
+      }, { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
+    });
+
+    // Extent
+    const eb = document.createElement('button');
+    eb.className = 'mci';
+    eb.title = 'Tüm alana dön';
+    eb.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 4.5V1h3.5M8.5 1H12v3.5M12 8.5V12H8.5M4.5 12H1V8.5"/>
+    </svg>`;
+    bl.appendChild(eb);
+    eb.addEventListener('click', () => this.resetView());
+  },
+
+  renderLegend(mode) {
+    const c = this.map && this.map.getContainer();
+    if (!c) return;
+    const old = c.querySelector('.map-legend'); if (old) old.remove();
+    const items = mode === 'cs' ? [
+      { color:'#2d6a4f', label:'İyi' }, { color:'#e9c46a', label:'Orta' },
+      { color:'#e76f51', label:'Kötü' },{ color:'#6d0026', label:'Harabe' },
+      { color:'#4895ef', label:'Yeni Yapı' },{ color:'#adb5bd', label:'Belirsiz' }
+    ] : [
+      { color:'#1a7a4a', label:'Tescilli' },{ color:'#f4a261', label:'Tescil Önerisi' },
+      { color:'#8b7355', label:'Tescilsiz' },{ color:'#4895ef', label:'Yeni Uygun' },
+      { color:'#e63946', label:'Yeni Uygun Değil' },{ color:'#c1121f', label:'Tarihi Kayıp' },
+      { color:'#adb5bd', label:'Belirsiz' }
+    ];
+    const div = document.createElement('div');
+    div.className = 'map-legend';
+    div.innerHTML = items.map(i =>
+      `<div class="legend-item"><span class="legend-dot" style="background:${i.color}"></span>${i.label}</div>`
+    ).join('');
+    c.appendChild(div);
+  },
+
+  _addControls() {
+    const c = this.map.getContainer();
 
     // Basemap
     const ob = c.querySelector('.basemap-toggle'); if(ob) ob.remove();
@@ -283,7 +431,7 @@ const MapModule = {
     // Tek katman toggle butonu — harita/uydu'nun solunda
     const ol = c.querySelector('.layer-toggle-single'); if(ol) ol.remove();
     const lb = document.createElement('button');
-    lb.className = 'layer-toggle-single active';
+    lb.className = 'layer-toggle-single';
     lb.title = 'Halihazır & Yapı No katmanlarını aç/kapat';
     lb.textContent = 'Katmanlar';
     c.appendChild(lb);
