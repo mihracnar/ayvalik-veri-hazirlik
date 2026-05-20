@@ -442,35 +442,6 @@ main {
 .status-row { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .loaded-badge { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
-/* ── Basemap toggle ──────────────────────────────────────────── */
-.basemap-toggle {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  display: flex;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-.bm-btn {
-  font: inherit;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border: none;
-  background: white;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all .15s;
-  letter-spacing: 0.02em;
-}
-.bm-btn:hover  { background: var(--bg); color: var(--ink); }
-.bm-btn.active { background: var(--ink); color: white; }
-.bm-btn + .bm-btn { border-left: 1px solid var(--border); }
-
 /* ── Photo clear button ──────────────────────────────────────── */
 .btn-photo-clear {
   background: none;
@@ -664,29 +635,6 @@ main {
   gap: 10px;
 }
 
-/* ── Map controls ─────────────────────────────────────────────── */
-.color-toggle {
-  position: absolute;
-  bottom: 42px;
-  right: 10px;
-  z-index: 10;
-  display: flex;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-.cm-btn {
-  font: inherit; font-size: 11px; font-weight: 500;
-  padding: 5px 10px; border: none;
-  background: white; color: var(--muted);
-  cursor: pointer; transition: all .15s;
-}
-.cm-btn:hover  { background: var(--bg); color: var(--ink); }
-.cm-btn.active { background: var(--ink); color: white; }
-.cm-btn + .cm-btn { border-left: 1px solid var(--border); }
-
 /* ── Map legend ───────────────────────────────────────────────── */
 .map-legend {
   position: absolute;
@@ -708,30 +656,6 @@ main {
   width: 10px; height: 10px;
   border-radius: 3px;
   flex-shrink: 0;
-}
-
-/* ── Map reset button ────────────────────────────────────────── */
-.map-reset-btn {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  z-index: 10;
-  width: 30px;
-  height: 30px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--rust);
-  box-shadow: var(--shadow);
-  transition: all .15s;
-}
-.map-reset-btn:hover {
-  background: rgba(181,74,54,.08);
-  border-color: rgba(181,74,54,.4);
 }
 
 /* ── Mobile responsive ───────────────────────────────────────── */
@@ -782,45 +706,213 @@ main {
   color: var(--ink-2);
 }
 
-/* ── Geo/konum butonu ────────────────────────────────────────── */
-.map-geo-btn {
+/* ── Harita attribution (harita altı) ───────────────────────── */
+.map-attr {
+  padding: 4px 16px 6px;
+  font-size: 10px;
+  color: var(--muted);
+  border-top: 1px solid var(--border-soft);
+}
+.map-attr a { color: var(--muted); text-decoration: none; }
+.map-attr a:hover { text-decoration: underline; }
+
+/* ════════════════════════════════════════════════════════════
+   Harita kontrol butonları — tümleşik sistem
+   ════════════════════════════════════════════════════════════ */
+
+/* Grup konteynerları */
+.map-ctrl-tr,
+.map-ctrl-bl {
   position: absolute;
-  bottom: 10px;
-  left: 48px;   /* reset butonunun sağında (10 + 30 + 8) */
   z-index: 10;
-  width: 30px;
-  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.map-ctrl-tr { top: 10px; right: 10px; }
+.map-ctrl-bl { bottom: 10px; left: 10px; }
+.map-ctrl-br {
+  position: absolute;
+  z-index: 10;
+  bottom: 10px;
+  right: 10px;
+}
+
+/* Grup (birleşik butonlar — Harita/Uydu, Koruma/Durum) */
+.mcg {
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
+/* Grup içi buton */
+.mcb {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0 10px;
+  height: 100%;
+  border: none;
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.mcb + .mcb        { border-left: 1px solid var(--border); }
+.mcb:hover         { background: var(--bg); color: var(--ink); }
+.mcb.active        { background: var(--ink); color: white; }
+
+/* Tekil metin butonu (Katmanlar) */
+.mcb.layer-toggle-single {
+  height: 28px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  color: var(--muted);
+}
+.mcb.layer-toggle-single.active { background: white; color: var(--ink); border-color: var(--ink-2); }
+.mcb.layer-toggle-single:hover  { background: var(--bg); }
+
+/* İkon butonlar (reset, konum, extent) */
+.mci {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: white;
   border: 1px solid var(--border);
   border-radius: 5px;
   cursor: pointer;
+  color: var(--ink-2);
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.mci:hover       { background: var(--bg); }
+.mci.active      { background: #2196F3; color: white; border-color: #2196F3; }
+.mci.reset       { color: var(--rust); }
+.mci.reset:hover { background: rgba(181,74,54,.08); border-color: rgba(181,74,54,.4); }
+
+/* ════════════════════════════════════════════════════════════
+   HARİTA KONTROL BUTONLARI — unified
+   Tüm butonlar: yükseklik 28px, font 11px/500, padding 0 10px
+   ════════════════════════════════════════════════════════════ */
+
+/* Ortak token */
+.map-ctrl-btn,
+.bm-btn,
+.cm-btn,
+.layer-toggle-single,
+.map-reset-btn,
+.map-geo-btn,
+.map-extent-btn {
+  box-sizing: border-box;
+  height: 28px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+/* ── Üst sağ: gruplu toggle'lar ─────────────────────────── */
+.basemap-toggle,
+.color-toggle {
+  position: absolute;
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--ink-2);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
   box-shadow: var(--shadow);
-  transition: all .15s;
 }
-.map-geo-btn:hover { background: #e3f2fd; color: #1565C0; border-color: #90CAF9; }
-.map-geo-btn.active { background: #2196F3; color: white; border-color: #2196F3; }
+.basemap-toggle { top: 10px; right: 10px; }
+.color-toggle   { bottom: 10px; right: 10px; }
 
-/* ── Extent/tüm alana dön butonu ────────────────────────────── */
+.bm-btn, .cm-btn {
+  padding: 0 10px;
+  border: none;
+  background: white;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.bm-btn + .bm-btn,
+.cm-btn + .cm-btn { border-left: 1px solid var(--border); }
+.bm-btn:hover,  .cm-btn:hover  { background: var(--bg); color: var(--ink); }
+.bm-btn.active, .cm-btn.active { background: var(--ink); color: white; }
+
+/* ── Üst sağ: katman toggle (basemap'in solunda) ─────────── */
+/* basemap ~104px genişliğinde + right:10 + 8gap = right:122 */
+.layer-toggle-single {
+  position: absolute;
+  top: 10px;
+  right: 122px;
+  z-index: 10;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.layer-toggle-single.active { color: var(--ink); border-color: var(--ink-2); }
+.layer-toggle-single:hover  { background: var(--bg); }
+
+/* ── Alt sol: ikon butonlar (reset, geo, extent) ─────────── */
+.map-reset-btn,
+.map-geo-btn,
 .map-extent-btn {
   position: absolute;
   bottom: 10px;
-  left: 86px;   /* reset(10) + geo(48) + 8gap */
   z-index: 10;
-  width: 30px;
-  height: 30px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  cursor: pointer;
+  width: 28px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
   color: var(--ink-2);
   box-shadow: var(--shadow);
-  transition: all .15s;
 }
+.map-reset-btn  { left: 10px;  color: var(--rust); }
+.map-geo-btn    { left: 46px; }
+.map-extent-btn { left: 82px; }
+
+.map-reset-btn:hover  { background: rgba(181,74,54,.08); border-color: rgba(181,74,54,.4); }
+.map-geo-btn:hover    { background: #e3f2fd; color: #1565C0; border-color: #90CAF9; }
+.map-geo-btn.active   { background: #2196F3; color: white; border-color: #2196F3; }
 .map-extent-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+
+/* ── Legend ──────────────────────────────────────────────── */
+.map-legend {
+  position: absolute;
+  bottom: 46px;
+  left: 10px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--ink-2); padding: 2px 0;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }

@@ -45,7 +45,7 @@ const MapModule = {
       },
       center: this._center(),
       zoom: 15, maxZoom: 19,
-      attributionControl: { compact: true },
+      attributionControl: false,
     });
     this.map.on('load', () => this._onLoad());
     this.map.on('error', (e) => console.warn('[map]', e.error && e.error.message));
@@ -279,6 +279,21 @@ const MapModule = {
     });
 
     this.renderLegend('cv');
+
+    // Tek katman toggle butonu — harita/uydu'nun solunda
+    const ol = c.querySelector('.layer-toggle-single'); if(ol) ol.remove();
+    const lb = document.createElement('button');
+    lb.className = 'layer-toggle-single active';
+    lb.title = 'Halihazır & Yapı No katmanlarını aç/kapat';
+    lb.textContent = 'Katmanlar';
+    c.appendChild(lb);
+    lb.addEventListener('click', () => {
+      const isActive = lb.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
+      });
+    });
 
     // Reset / tüm haritayı gör butonu
     const or = c.querySelector('.map-reset-btn'); if(or) or.remove();
