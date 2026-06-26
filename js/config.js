@@ -40,26 +40,16 @@ const CONFIG = {
 
     // 9. KULLANAN ─────────────────────────────────────────────
     { key: 'User_1',              label: 'User',                    group: 'Use Status & Ownership', type: 'multiselect', editable: true,
-      options: ['', 'INDIVIDUAL', 'PRIVATE', 'COMMUNITY',
-               'MUNICIPALITY', 'GOVERNMENT', 'STATE', 'PUBLIC',
-               'MINISTRY OF EDUCATION',
-               'THE ORTHODOX CHURCH OF GREECE', 'FOUNDATION',
-               'UNIVERSITY', 'GREEK POLICE', 'ARMY', 'OTHER'] },
+      options: ['', 'INDIVIDUAL', 'FOUNDATION', 'GOVERNMENT', 'MUNICIPALITY', 'OTHER'] },
 
     // 10. MÜLKİYET ───────────────────────────────────────────
     { key: 'Owner_1',             label: 'Owner',                   group: 'Use Status & Ownership', type: 'multiselect', editable: true,
-      options: ['', 'INDIVIDUAL', 'PRIVATE',
-               'MUNICIPALITY', 'GOVERNMENT', 'STATE', 'PUBLIC',
-               'MINISTRY OF CULTURE', 'MINISTRY OF EDUCATION', 'MINISTRY OF INTERNAL AFFAIRS',
-               'THE ORTHODOX CHURCH OF GREECE', 'CHURCH', 'FOUNDATION', 'VATICAN',
-               'UNIVERSITY', 'ARMY', 'OTHER'] },
+      options: ['', 'INDIVIDUAL', 'FOUNDATION', 'GOVERNMENT', 'MUNICIPALITY', 'OTHER'] },
 
     { key: 'PreservingBody',      label: 'Preservation Authority', group: 'Use Status & Ownership', type: 'multiselect', editable: true,
-      options: ['', 'PRIVATE',
-               'MUNICIPALITY', 'GOVERNMENT', 'STATE',
+      options: ['', 'PRIVATE', 'MUNICIPALITY', 'STATE',
                'MINISTRY OF CULTURE', 'MINISTRY OF EDUCATION', 'MINISTRY OF INTERNAL AFFAIRS',
-               'THE ORTHODOX CHURCH OF GREECE', 'CHURCH', 'FOUNDATION', 'VATICAN',
-               'UNIVERSITY', 'ARMY', 'OTHER'] },
+               'OTHER'] },
 
     // 12. OTANTİK KAT SAYISI ──────────────────────────────────
     { key: 'FloorNumber',         label: 'Authentic Floor No',      group: 'Floors & Condition', type: 'floorNumber', editable: true,
@@ -76,11 +66,11 @@ const CONFIG = {
 
     // 14. YAPI SİSTEMİ ────────────────────────────────────────
     { key: 'ConstructionType',    label: 'Construction Type',      group: 'Floors & Condition', type: 'multiselect', editable: true,
-      options: ['', 'MASONRY', 'TIMBER CARCASS', 'CONCRETE', 'STEEL', 'OTHER'] },
+      options: ['', 'MASONRY', 'CARCASS', 'CONCRETE', 'STEEL', 'OTHER'] },
 
     // 15. MALZEME ─────────────────────────────────────────────
     { key: 'Material',            label: 'Material',                group: 'Floors & Condition', type: 'multiselect', editable: true,
-      options: ['', 'STONE', 'BRICK', 'TIMBER', 'CONCRETE', 'STEEL', 'MASONRY', 'OTHER'] },
+      options: ['', 'TIMBER', 'STONE', 'CONCRETE', 'BRICK', 'STEEL', 'OTHER'] },
 
     // 16. KORUMA STATÜSÜ ──────────────────────────────────────
     { key: 'CulturalValue',       label: 'Legal Status of Conservation', group: 'Floors & Condition', type: 'select', editable: true,
