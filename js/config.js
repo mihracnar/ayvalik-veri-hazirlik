@@ -29,10 +29,7 @@ const CONFIG = {
 
     // 4. İNŞAAT TARİHİ / DÖNEMİ ──────────────────────────────
     { key: 'Period',              label: 'Construction Date/Period', group: 'Period', type: 'select', editable: true,
-      options: ['', 'OTTOMAN', '18TH-19TH', '19TH', '19TH-20TH', '20TH', 'MODERN', 'NEW BUILDING',
-               'OTTOMAN+NEW BUILDING', 'OTTOMAN+RUSSIAN', 'NEO CLASSIC+OTTOMAN',
-               'VENETIAN', 'VENETIAN IMITATION', 'OTTOMAN IMITATION', 'IMITATION',
-               'UNKNOWN', 'OTHER'] },
+      options: ['', '16TH', '17TH', '18TH', '19TH', '20TH', 'OTHER'] },
 
     // 8. KULLANIM DURUMU ──────────────────────────────────────
     { key: 'UsageType',           label: 'Use Status',              group: 'Use Status & Ownership', type: 'multiselect', editable: true,
