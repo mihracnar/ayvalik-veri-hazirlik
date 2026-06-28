@@ -1,0 +1,5 @@
+data/ortofoto/*.tif
+data/ortofoto/*.tfw
+data/ortofoto/*.aux.xml
+data/ortofoto/*.ovr
+data/ortofoto/*.mbtiles

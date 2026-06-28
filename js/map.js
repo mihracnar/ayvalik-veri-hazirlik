@@ -18,7 +18,7 @@ const MapModule = {
     if (!container) return;
     if (this.map) { try { this.map.remove(); } catch (_) {} this.map = null; }
 
-    this.map = new maplibregl.Map({
+  this.map = new maplibregl.Map({
       container,
       style: {
         version: 8,
@@ -51,11 +51,35 @@ const MapModule = {
     this.map.on('error', (e) => console.warn('[map]', e.error && e.error.message));
   },
 
-  _onLoad() {
+  async _onLoad() {
     const m = this.map;
 
+    // 0. ALTTA — Ortofoto (PMTiles raster)
+    // Ortofoto — XYZ tile klasörü (gdal2tiles TMS Y-flip)
+    m.addSource('ortofoto', {
+      type: 'raster',
+      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/ortofoto/tiles/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      scheme: 'tms',
+      minzoom: 17, maxzoom: 19,
+      attribution: '© Ayvalık Ortofoto 1971'
+    });
+    m.addLayer({
+      id: 'ortofoto-layer',
+      type: 'raster',
+      source: 'ortofoto',
+      layout: { visibility: 'none' },
+      paint: { 'raster-opacity': 0.9 }
+    });
+
     // 1. ALTTA — Halihazır harita (polyline)
-    m.addSource('halihazir', { type:'geojson', data:'./data/halihazir.geojson' });
+    // Halihazır + ek birleştir
+    const [hh1, hh2] = await Promise.all([
+      fetch('./data/halihazir.geojson').then(r => r.json()).catch(() => ({ type:'FeatureCollection', features:[] })),
+      fetch('./data/halihazir_ek.geojson').then(r => r.json()).catch(() => ({ type:'FeatureCollection', features:[] }))
+    ]);
+    const hhMerged = { type:'FeatureCollection', features:[...hh1.features, ...hh2.features] };
+    m.addSource('halihazir', { type:'geojson', data: hhMerged });
     m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
       layout:{ 'visibility':'none' },
       paint:{ 'line-color':'#c0392b', 'line-width':0.8, 'line-opacity':0.7 }
@@ -399,20 +423,72 @@ const MapModule = {
   _addControls() {
     const c = this.map.getContainer();
 
-    // Basemap
-    const ob = c.querySelector('.basemap-toggle'); if(ob) ob.remove();
-    const bm = document.createElement('div'); bm.className = 'basemap-toggle';
-    bm.innerHTML = `<button data-bm="carto" class="bm-btn active">Map</button>
-                    <button data-bm="satellite" class="bm-btn">Satellite</button>`;
-    c.appendChild(bm);
-    bm.addEventListener('click', e => {
-      const btn = e.target.closest('.bm-btn'); if(!btn) return;
-      bm.querySelectorAll('.bm-btn').forEach(b => b.classList.toggle('active', b===btn));
-      this.map.setLayoutProperty('carto-layer',    'visibility', btn.dataset.bm==='carto'?'visible':'none');
-      this.map.setLayoutProperty('satellite-layer','visibility', btn.dataset.bm==='satellite'?'visible':'none');
+    // Üst sağ kontrol grubu — tek container
+    const otr = c.querySelector('.map-ctrl-tr'); if(otr) otr.remove();
+    const tr = document.createElement('div'); tr.className = 'map-ctrl-tr';
+    c.appendChild(tr);
+
+    // Buildings toggle
+    const yapiBtn = document.createElement('button');
+    yapiBtn.className = 'ctrl-btn active';
+    yapiBtn.textContent = 'Buildings';
+    yapiBtn.addEventListener('click', () => {
+      const isActive = yapiBtn.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['all-fill','all-line','sel-fill','sel-line','hov-fill'].forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
+      });
+    });
+    tr.appendChild(yapiBtn);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Layers toggle
+    const lb = document.createElement('button');
+    lb.className = 'ctrl-btn';
+    lb.textContent = 'Layers';
+    lb.addEventListener('click', () => {
+      const isActive = lb.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
+      });
+    });
+    tr.appendChild(lb);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Ortofoto toggle
+    const ortoBtn = document.createElement('button');
+    ortoBtn.className = 'ctrl-btn';
+    ortoBtn.textContent = 'Ortofoto';
+    ortoBtn.addEventListener('click', () => {
+      const isActive = ortoBtn.classList.toggle('active');
+      try { this.map.setLayoutProperty('ortofoto-layer', 'visibility', isActive ? 'visible' : 'none'); } catch(_) {}
+    });
+    tr.appendChild(ortoBtn);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Basemap toggle
+    const cartoBtn  = document.createElement('button');
+    const satBtn    = document.createElement('button');
+    cartoBtn.className = 'ctrl-btn active'; cartoBtn.textContent = 'Map';
+    satBtn.className   = 'ctrl-btn';        satBtn.textContent   = 'Satellite';
+    [cartoBtn, satBtn].forEach(btn => {
+      btn.addEventListener('click', () => {
+        cartoBtn.classList.toggle('active', btn === cartoBtn);
+        satBtn.classList.toggle('active',   btn === satBtn);
+        this.map.setLayoutProperty('carto-layer',     'visibility', btn === cartoBtn  ? 'visible' : 'none');
+        this.map.setLayoutProperty('satellite-layer', 'visibility', btn === satBtn    ? 'visible' : 'none');
+      });
+      tr.appendChild(btn);
     });
 
-    // Color mode
+    // Color mode — alt sağ (değişmedi)
     const oc = c.querySelector('.color-toggle'); if(oc) oc.remove();
     const ct = document.createElement('div'); ct.className = 'color-toggle';
     ct.innerHTML = `<button data-cm="cv" class="cm-btn active">Heritage</button>
@@ -427,21 +503,6 @@ const MapModule = {
     });
 
     this.renderLegend('cv');
-
-    // Tek katman toggle butonu — harita/uydu'nun solunda
-    const ol = c.querySelector('.layer-toggle-single'); if(ol) ol.remove();
-    const lb = document.createElement('button');
-    lb.className = 'layer-toggle-single';
-    lb.title = 'Toggle survey & building number layers';
-    lb.textContent = 'Layers';
-    c.appendChild(lb);
-    lb.addEventListener('click', () => {
-      const isActive = lb.classList.toggle('active');
-      const vis = isActive ? 'visible' : 'none';
-      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
-        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
-      });
-    });
 
     // Reset / tüm haritayı gör butonu
     const or = c.querySelector('.map-reset-btn'); if(or) or.remove();
