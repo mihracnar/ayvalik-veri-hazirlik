@@ -80,6 +80,17 @@ const MapModule = {
     ]);
     const hhMerged = { type:'FeatureCollection', features:[...hh1.features, ...hh2.features] };
     m.addSource('halihazir', { type:'geojson', data: hhMerged });
+
+    // Yapı adası polygons + label
+    m.addSource('yapiadasi', { type:'geojson', data:'./data/yapiadasi.geojson' });
+    m.addLayer({ id:'yapiadasi-fill', type:'fill', source:'yapiadasi',
+      layout:{ visibility:'visible' },
+      paint:{ 'fill-color':'#e63946', 'fill-opacity':0.05 }
+    });
+    m.addLayer({ id:'yapiadasi-line', type:'line', source:'yapiadasi',
+      layout:{ visibility:'visible' },
+      paint:{ 'line-color':'#e63946', 'line-width':1.5, 'line-opacity':0.9 }
+    });
     m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
       layout:{ 'visibility':'none' },
       paint:{ 'line-color':'#c0392b', 'line-width':0.8, 'line-opacity':0.7 }
@@ -96,6 +107,22 @@ const MapModule = {
       'line-width': ['case',['==',['get','_h'],1], 0.2, 0.8],
       'line-opacity':['case',['==',['get','_h'],1], 0.15, 1]
     }});
+    m.addLayer({ id:'all-label', type:'symbol', source:'all-yapi',
+      minzoom: 16,
+      layout:{
+        'visibility': 'visible',
+        'text-field': ['concat', ['get','AdaNO'], '/', ['get','ParselNO']],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 9,
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+      },
+      paint:{
+        'text-color': '#1a1612',
+        'text-halo-color': 'rgba(255,255,255,0.8)',
+        'text-halo-width': 1,
+      }
+    });
 
     m.addSource('sel-yapi', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
     m.addLayer({ id:'sel-fill', type:'fill', source:'sel-yapi',
@@ -137,6 +164,29 @@ const MapModule = {
         'text-opacity': 0.75,
         'text-halo-color': 'rgba(255,255,255,0.85)',
         'text-halo-width': 1.5,
+      }
+    });
+
+    // Yapı adası label — en üstte
+    m.addLayer({ id:'yapiadasi-label', type:'symbol', source:'yapiadasi',
+      minzoom: 0,
+      layout:{
+        visibility:'visible',
+        'text-field': ['get','label'],
+        'text-font': ['Noto Sans Bold'],
+        'text-size': ['interpolate', ['linear'], ['zoom'],
+          10, 8,
+          13, 10,
+          15, 12,
+          17, 14
+        ],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+      },
+      paint:{
+        'text-color': '#c1121f',
+        'text-halo-color': 'rgba(255,255,255,1)',
+        'text-halo-width': 3,
       }
     });
     if (App.state.selectedId) { this._applySelection(App.state.selectedId); this._flyTo(App.state.selectedId); }
@@ -225,10 +275,10 @@ const MapModule = {
 
   _colorExpr(mode) {
     if (mode === 'cs') return ['match',['get','_cs'],
-      'good','#2d6a4f','medium','#e9c46a','bad','#e76f51','ruin','#6d0026','new','#4895ef','#adb5bd'];
+      'good','#2d6a4f','medium','#e9c46a','bad','#e76f51','ruin','#6d0026','new','#4895ef','#fdf6e3'];
     return ['match',['get','_cat'],
       'listed','#1a7a4a','proposed','#f4a261','not_listed','#8b7355',
-      'new_suitable','#4895ef','lost_new','#c1121f','unsuitable','#e63946','#adb5bd'];
+      'new_suitable','#4895ef','lost_new','#c1121f','unsuitable','#e63946','#fdf6e3'];
   },
 
   _cvCat(cv) {
@@ -260,12 +310,12 @@ const MapModule = {
     const items = mode === 'cs' ? [
       { color:'#2d6a4f', label:'Good' }, { color:'#e9c46a', label:'Fair' },
       { color:'#e76f51', label:'Poor' },{ color:'#6d0026', label:'Ruin' },
-      { color:'#4895ef', label:'New Building' },{ color:'#adb5bd', label:'Unknown' }
+      { color:'#4895ef', label:'New Building' },{ color:'#fdf6e3', label:'Unknown' }
     ] : [
       { color:'#1a7a4a', label:'Listed' },{ color:'#f4a261', label:'Proposed' },
       { color:'#8b7355', label:'Not Listed' },{ color:'#4895ef', label:'New Suitable' },
       { color:'#e63946', label:'Unsuitable' },{ color:'#c1121f', label:'Historic Lost' },
-      { color:'#adb5bd', label:'Unknown' }
+      { color:'#fdf6e3', label:'Unknown' }
     ];
     const div = document.createElement('div');
     div.className = 'map-legend';
@@ -405,12 +455,12 @@ const MapModule = {
     const items = mode === 'cs' ? [
       { color:'#2d6a4f', label:'Good' }, { color:'#e9c46a', label:'Fair' },
       { color:'#e76f51', label:'Poor' },{ color:'#6d0026', label:'Ruin' },
-      { color:'#4895ef', label:'New Building' },{ color:'#adb5bd', label:'Unknown' }
+      { color:'#4895ef', label:'New Building' },{ color:'#fdf6e3', label:'Unknown' }
     ] : [
       { color:'#1a7a4a', label:'Listed' },{ color:'#f4a261', label:'Proposed' },
       { color:'#8b7355', label:'Not Listed' },{ color:'#4895ef', label:'New Suitable' },
       { color:'#e63946', label:'Unsuitable' },{ color:'#c1121f', label:'Historic Lost' },
-      { color:'#adb5bd', label:'Unknown' }
+      { color:'#fdf6e3', label:'Unknown' }
     ];
     const div = document.createElement('div');
     div.className = 'map-legend';
@@ -435,7 +485,7 @@ const MapModule = {
     yapiBtn.addEventListener('click', () => {
       const isActive = yapiBtn.classList.toggle('active');
       const vis = isActive ? 'visible' : 'none';
-      ['all-fill','all-line','sel-fill','sel-line','hov-fill'].forEach(id => {
+      ['all-fill','all-line','all-label','sel-fill','sel-line','hov-fill'].forEach(id => {
         try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
       });
     });
@@ -456,6 +506,22 @@ const MapModule = {
       });
     });
     tr.appendChild(lb);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Blocks (Yapı Adası) toggle
+    const blocksBtn = document.createElement('button');
+    blocksBtn.className = 'ctrl-btn active';
+    blocksBtn.textContent = 'Blocks';
+    blocksBtn.addEventListener('click', () => {
+      const isActive = blocksBtn.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['yapiadasi-fill','yapiadasi-line','yapiadasi-label'].forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
+      });
+    });
+    tr.appendChild(blocksBtn);
 
     // Separator
     tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
@@ -484,6 +550,11 @@ const MapModule = {
         satBtn.classList.toggle('active',   btn === satBtn);
         this.map.setLayoutProperty('carto-layer',     'visibility', btn === cartoBtn  ? 'visible' : 'none');
         this.map.setLayoutProperty('satellite-layer', 'visibility', btn === satBtn    ? 'visible' : 'none');
+        // Satellite'te yapıadası çizgisi beyaz, Map'te kırmızı
+        const adaColor = btn === satBtn ? '#ffffff' : '#e63946';
+        try { this.map.setPaintProperty('yapiadasi-line', 'line-color', adaColor); } catch(_) {}
+        try { this.map.setPaintProperty('yapiadasi-label', 'text-color', btn === satBtn ? '#ffffff' : '#c1121f'); } catch(_) {}
+        try { this.map.setPaintProperty('yapiadasi-label', 'text-halo-color', btn === satBtn ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,1)'); } catch(_) {}
       });
       tr.appendChild(btn);
     });
