@@ -108,7 +108,7 @@ const MapModule = {
       'line-opacity':['case',['==',['get','_h'],1], 0.15, 1]
     }});
     m.addLayer({ id:'all-label', type:'symbol', source:'all-yapi',
-      minzoom: 16,
+      minzoom: 17,
       layout:{
         'visibility': 'visible',
         'text-field': ['concat', ['get','AdaNO'], '/', ['get','ParselNO']],
@@ -169,7 +169,7 @@ const MapModule = {
 
     // Yapı adası label — en üstte
     m.addLayer({ id:'yapiadasi-label', type:'symbol', source:'yapiadasi',
-      minzoom: 0,
+      minzoom: 16,
       layout:{
         visibility:'visible',
         'text-field': ['get','label'],
