@@ -110,7 +110,6 @@ const CONFIG = {
     // 19. ÖNERİLEN KULLANIM ───────────────────────────────────
     { key: 'SuggestedUse_1',      label: 'Suggested Use',           group: 'Usage', type: 'multiselect', editable: true,
       options: ['',
-        'HOUSE',
         'COMMERCE', 'SERVICE', 'TOURISM SERVICE',
         'CULTURE', 'EDUCATION', 'RELIGION', 'HEALTH',
         'STORAGE', 'OFFICE', 'ATELIER',
@@ -122,7 +121,7 @@ const CONFIG = {
 
     // 20. OTANTİKLİK DURUMU ───────────────────────────────────
     { key: 'Authenticity',        label: 'Status of Authenticity', group: 'Authenticity', type: 'multiselect', editable: true,
-      options: ['', 'GOOD', 'MEDIUM', 'BAD', 'RUIN', 'LOST', 'OTHER'] },
+      options: ['', 'GOOD', 'MEDIUM', 'BAD', 'RUIN', 'LOST', 'NEW BUILDING', 'OTHER'] },
     // Authenticity_2 formdan kaldırıldı — DB sütunu korunuyor.
 
     // 21. DEĞİŞİKLİKLER ───────────────────────────────────────
