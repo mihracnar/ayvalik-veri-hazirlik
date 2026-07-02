@@ -43,6 +43,9 @@ const CONFIG = {
     { key: 'Owner_1',             label: 'Owner',                   group: 'Use Status & Ownership', type: 'multiselect', editable: true,
       options: ['', 'INDIVIDUAL', 'FOUNDATION', 'GOVERNMENT', 'MUNICIPALITY', 'OTHER'] },
 
+    { key: 'CommunitySign',       label: 'Community Sign',          group: 'Use Status & Ownership', type: 'multiselect', editable: true,
+      options: ['', 'MUSLIM', 'CHRISTIAN', 'JEWISH', 'OTHER'] },
+
     { key: 'PreservingBody',      label: 'Preservation Authority', group: 'Use Status & Ownership', type: 'multiselect', editable: true,
       options: ['', 'PRIVATE', 'MUNICIPALITY', 'STATE',
                'MINISTRY OF CULTURE', 'MINISTRY OF EDUCATION', 'MINISTRY OF INTERNAL AFFAIRS',
