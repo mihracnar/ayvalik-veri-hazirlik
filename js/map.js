@@ -54,32 +54,36 @@ const MapModule = {
   async _onLoad() {
     const m = this.map;
 
-    // 0. ALTTA — Ortofoto (PMTiles raster)
-    // Ortofoto — XYZ tile klasörü (gdal2tiles TMS Y-flip)
+    // 0. ALTTA — Raster altlıklar
     m.addSource('ortofoto', {
       type: 'raster',
-      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/ortofoto/tiles/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      scheme: 'tms',
-      minzoom: 17, maxzoom: 19,
+      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/1971/tiles/{z}/{x}/{y}.png'],
+      tileSize: 256, scheme: 'tms',
       attribution: '© Ayvalık Ortofoto 1971'
     });
-    m.addLayer({
-      id: 'ortofoto-layer',
+    m.addLayer({ id:'ortofoto-layer', type:'raster', source:'ortofoto',
+      layout:{ visibility:'none' }, paint:{ 'raster-opacity':0.9 } });
+
+    m.addSource('ortofoto1956', {
       type: 'raster',
-      source: 'ortofoto',
-      layout: { visibility: 'none' },
-      paint: { 'raster-opacity': 0.9 }
+      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/1956/tiles/{z}/{x}/{y}.png'],
+      tileSize: 256, scheme: 'tms',
+      attribution: '© Ayvalık Ortofoto 1956'
     });
+    m.addLayer({ id:'ortofoto1956-layer', type:'raster', source:'ortofoto1956',
+      layout:{ visibility:'none' }, paint:{ 'raster-opacity':0.9 } });
+
+    m.addSource('koruma_imar', {
+      type: 'raster',
+      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/koruma_imar/tiles/{z}/{x}/{y}.png'],
+      tileSize: 256, scheme: 'tms',
+      attribution: '© Koruma İmar Planı'
+    });
+    m.addLayer({ id:'koruma-imar-layer', type:'raster', source:'koruma_imar',
+      layout:{ visibility:'none' }, paint:{ 'raster-opacity':0.9 } });
 
     // 1. ALTTA — Halihazır harita (polyline)
-    // Halihazır + ek birleştir
-    const [hh1, hh2] = await Promise.all([
-      fetch('./data/halihazir.geojson').then(r => r.json()).catch(() => ({ type:'FeatureCollection', features:[] })),
-      fetch('./data/halihazir_ek.geojson').then(r => r.json()).catch(() => ({ type:'FeatureCollection', features:[] }))
-    ]);
-    const hhMerged = { type:'FeatureCollection', features:[...hh1.features, ...hh2.features] };
-    m.addSource('halihazir', { type:'geojson', data: hhMerged });
+    m.addSource('halihazir', { type:'geojson', data:'./data/halihazir.geojson' });
 
     // Yapı adası polygons + label
     m.addSource('yapiadasi', { type:'geojson', data:'./data/yapiadasi.geojson' });
@@ -91,15 +95,13 @@ const MapModule = {
       layout:{ visibility:'visible' },
       paint:{ 'line-color':'#e63946', 'line-width':1.5, 'line-opacity':0.9 }
     });
-    m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
-      layout:{ 'visibility':'none' },
-      paint:{ 'line-color':'#c0392b', 'line-width':0.8, 'line-opacity':0.7 }
-    });
+
+
 
     // 2. ORTADA — Yapı poligonları
     m.addSource('all-yapi', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
     m.addLayer({ id:'all-fill', type:'fill', source:'all-yapi', paint:{
-      'fill-color': this._colorExpr('cv'),
+      'fill-color': '#d4a574',
       'fill-opacity': ['case', ['==',['get','_h'],1], 0.04, 0.45]
     }});
     m.addLayer({ id:'all-line', type:'line', source:'all-yapi', paint:{
@@ -107,6 +109,66 @@ const MapModule = {
       'line-width': ['case',['==',['get','_h'],1], 0.2, 0.8],
       'line-opacity':['case',['==',['get','_h'],1], 0.15, 1]
     }});
+    m.addLayer({ id:'halihazir-line', type:'line', source:'halihazir',
+      layout:{ 'visibility':'none' },
+      paint:{
+        'line-color': ['match', ['get','Layer'],
+          'Wall', '#1a1a1a',
+          '#c0392b'
+        ],
+        'line-width': ['match', ['get','Layer'],
+          'Wall', 2.2,
+          0.7
+        ],
+        'line-opacity': ['match', ['get','Layer'],
+          'Wall', 0.9,
+          0.7
+        ]
+      }
+    });
+    m.addLayer({ id:'halihazir-glow', type:'line', source:'halihazir',
+      layout:{ 'visibility':'none' },
+      filter: ['==', ['get','Layer'], 'Wall'],
+      paint:{
+        'line-color': '#1a237e',
+        'line-width': 8,
+        'line-opacity': 0,
+        'line-blur': 6
+      }
+    });
+
+    // Polygon katmanları: müstemilat, ek yapı, kayıp yapı
+    m.addSource('mustemilat',  { type:'geojson', data:'./data/mustemilat.geojson'  });
+    m.addSource('ek_yapi',     { type:'geojson', data:'./data/ek_yapi.geojson'     });
+    m.addSource('kayip_yapi',  { type:'geojson', data:'./data/kayip_yapi.geojson'  });
+
+    m.addLayer({ id:'mustemilat-fill', type:'fill', source:'mustemilat',
+      layout:{ visibility:'none' },
+      paint:{ 'fill-color':'#7f8c8d', 'fill-opacity':0.35 }
+    });
+    m.addLayer({ id:'mustemilat-line', type:'line', source:'mustemilat',
+      layout:{ visibility:'none' },
+      paint:{ 'line-color':'#7f8c8d', 'line-width':1.0, 'line-opacity':0.9 }
+    });
+
+    m.addLayer({ id:'ek-yapi-fill', type:'fill', source:'ek_yapi',
+      layout:{ visibility:'none' },
+      paint:{ 'fill-color':'#e67e22', 'fill-opacity':0.35 }
+    });
+    m.addLayer({ id:'ek-yapi-line', type:'line', source:'ek_yapi',
+      layout:{ visibility:'none' },
+      paint:{ 'line-color':'#e67e22', 'line-width':1.0, 'line-opacity':0.9 }
+    });
+
+    m.addLayer({ id:'kayip-yapi-fill', type:'fill', source:'kayip_yapi',
+      layout:{ visibility:'none' },
+      paint:{ 'fill-color':'#9b59b6', 'fill-opacity':0.35 }
+    });
+    m.addLayer({ id:'kayip-yapi-line', type:'line', source:'kayip_yapi',
+      layout:{ visibility:'none' },
+      paint:{ 'line-color':'#9b59b6', 'line-width':1.0, 'line-opacity':0.9 }
+    });
+
     m.addLayer({ id:'all-label', type:'symbol', source:'all-yapi',
       minzoom: 17,
       layout:{
@@ -137,35 +199,6 @@ const MapModule = {
     requestAnimationFrame(() => this._loadAllFeatures());
 
     // 3. ÜSTTE — Yapı No noktaları + label
-    m.addSource('yapino', { type:'geojson', data:'./data/yapino.geojson' });
-    m.addLayer({ id:'yapino-point', type:'circle', source:'yapino',
-      layout:{ 'visibility':'none' },
-      paint:{
-        'circle-radius': 3,
-        'circle-color': '#c0392b',
-        'circle-opacity': 0.8,
-        'circle-stroke-width': 0,
-      }
-    });
-    m.addLayer({ id:'yapino-label', type:'symbol', source:'yapino',
-      minzoom: 17,
-      layout:{
-        'visibility': 'none',
-        'text-field': ['get', 'Yapı No_Text'],
-        'text-font': ['Noto Sans Regular'],
-        'text-size': 10,
-        'text-offset': [0, 1.1],
-        'text-anchor': 'top',
-        'text-allow-overlap': false,
-        'text-ignore-placement': false,
-      },
-      paint:{
-        'text-color': '#c0392b',
-        'text-opacity': 0.75,
-        'text-halo-color': 'rgba(255,255,255,0.85)',
-        'text-halo-width': 1.5,
-      }
-    });
 
     // Yapı adası label — en üstte
     m.addLayer({ id:'yapiadasi-label', type:'symbol', source:'yapiadasi',
@@ -220,7 +253,7 @@ const MapModule = {
     const src = this.map && this.map.getSource('all-yapi');
     if (!src) return;
     const fc = this._buildAllFC(activeIds);
-    try { this.map.setPaintProperty('all-fill','fill-color', this._colorExpr(this._colorMode)); } catch(_) {}
+    try { this.map.setPaintProperty('all-fill','fill-color', '#d4a574'); } catch(_) {}
     const url = URL.createObjectURL(new Blob([JSON.stringify(fc)],{type:'application/json'}));
     src.setData(url);
   },
@@ -307,21 +340,16 @@ const MapModule = {
     const c = this.map && this.map.getContainer();
     if (!c) return;
     const old = c.querySelector('.map-legend'); if (old) old.remove();
-    const items = mode === 'cs' ? [
-      { color:'#2d6a4f', label:'Good' }, { color:'#e9c46a', label:'Fair' },
-      { color:'#e76f51', label:'Poor' },{ color:'#6d0026', label:'Ruin' },
-      { color:'#4895ef', label:'New Building' },{ color:'#fdf6e3', label:'Unknown' }
-    ] : [
-      { color:'#1a7a4a', label:'Listed' },{ color:'#f4a261', label:'Proposed' },
-      { color:'#8b7355', label:'Not Listed' },{ color:'#4895ef', label:'New Suitable' },
-      { color:'#e63946', label:'Unsuitable' },{ color:'#c1121f', label:'Historic Lost' },
-      { color:'#fdf6e3', label:'Unknown' }
-    ];
     const div = document.createElement('div');
     div.className = 'map-legend';
-    div.innerHTML = items.map(i =>
-      `<div class="legend-item"><span class="legend-dot" style="background:${i.color}"></span>${i.label}</div>`
-    ).join('');
+    div.innerHTML = `
+      <div class="legend-item"><span class="legend-dot" style="background:#d4a574"></span>Buildings</div>
+      <div class="legend-sep"></div>
+      <div class="legend-item"><span class="legend-line" style="background:#1a1a1a"></span>Walls</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#9b59b6"></span>Lost Building</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#e67e22"></span>Extensions</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#7f8c8d"></span>Outbuildings</div>
+    `;
     c.appendChild(div);
   },
 
@@ -345,7 +373,7 @@ const MapModule = {
     lb.addEventListener('click', () => {
       const isActive = lb.classList.toggle('active');
       const vis = isActive ? 'visible' : 'none';
-      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
+      ['halihazir-line','mustemilat-fill','mustemilat-line','ek-yapi-fill','ek-yapi-line','kayip-yapi-fill','kayip-yapi-line'].forEach(id => {
         try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
       });
     });
@@ -363,19 +391,6 @@ const MapModule = {
       this.map.setLayoutProperty('satellite-layer', 'visibility', btn.dataset.bm==='satellite'?'visible':'none');
     });
 
-    // ── Sağ alt (Koruma/Durum) ────────────────────────────────
-    const br = document.createElement('div');
-    br.className = 'map-ctrl-br mcg';
-    br.innerHTML = `<button data-cm="cv" class="mcb active">Heritage</button>
-                    <button data-cm="cs" class="mcb">Condition</button>`;
-    c.appendChild(br);
-    br.addEventListener('click', e => {
-      const btn = e.target.closest('.mcb[data-cm]'); if (!btn) return;
-      this._colorMode = btn.dataset.cm;
-      br.querySelectorAll('.mcb').forEach(b => b.classList.toggle('active', b===btn));
-      this.refreshDisplay(App.state.activeFilterIds || null);
-      this.renderLegend(this._colorMode);
-    });
 
     // ── Sol alt grubu (Reset + Konum + Extent) ────────────────
     const bl = document.createElement('div');
@@ -452,21 +467,16 @@ const MapModule = {
     const c = this.map && this.map.getContainer();
     if (!c) return;
     const old = c.querySelector('.map-legend'); if (old) old.remove();
-    const items = mode === 'cs' ? [
-      { color:'#2d6a4f', label:'Good' }, { color:'#e9c46a', label:'Fair' },
-      { color:'#e76f51', label:'Poor' },{ color:'#6d0026', label:'Ruin' },
-      { color:'#4895ef', label:'New Building' },{ color:'#fdf6e3', label:'Unknown' }
-    ] : [
-      { color:'#1a7a4a', label:'Listed' },{ color:'#f4a261', label:'Proposed' },
-      { color:'#8b7355', label:'Not Listed' },{ color:'#4895ef', label:'New Suitable' },
-      { color:'#e63946', label:'Unsuitable' },{ color:'#c1121f', label:'Historic Lost' },
-      { color:'#fdf6e3', label:'Unknown' }
-    ];
     const div = document.createElement('div');
     div.className = 'map-legend';
-    div.innerHTML = items.map(i =>
-      `<div class="legend-item"><span class="legend-dot" style="background:${i.color}"></span>${i.label}</div>`
-    ).join('');
+    div.innerHTML = `
+      <div class="legend-item"><span class="legend-dot" style="background:#d4a574"></span>Buildings</div>
+      <div class="legend-sep"></div>
+      <div class="legend-item"><span class="legend-line" style="background:#1a1a1a"></span>Walls</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#9b59b6"></span>Lost Building</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#e67e22"></span>Extensions</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#7f8c8d"></span>Outbuildings</div>
+    `;
     c.appendChild(div);
   },
 
@@ -494,18 +504,59 @@ const MapModule = {
     // Separator
     tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
 
-    // Layers toggle
+    // Walls toggle
     const lb = document.createElement('button');
-    lb.className = 'ctrl-btn';
-    lb.textContent = 'Layers';
+    lb.className = 'ctrl-btn active';
+    lb.textContent = 'Walls';
     lb.addEventListener('click', () => {
       const isActive = lb.classList.toggle('active');
       const vis = isActive ? 'visible' : 'none';
-      ['halihazir-line','yapino-point','yapino-label'].forEach(id => {
-        try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {}
-      });
+      try { this.map.setLayoutProperty('halihazir-line', 'visibility', vis); } catch(_) {}
+      try { this.map.setLayoutProperty('halihazir-glow', 'visibility', vis); } catch(_) {}
     });
     tr.appendChild(lb);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Lost Building toggle
+    const lostBtn = document.createElement('button');
+    lostBtn.className = 'ctrl-btn active';
+    lostBtn.textContent = 'Lost Building';
+    lostBtn.addEventListener('click', () => {
+      const isActive = lostBtn.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['kayip-yapi-fill','kayip-yapi-line'].forEach(id => { try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {} });
+    });
+    tr.appendChild(lostBtn);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Extensions toggle
+    const extBtn = document.createElement('button');
+    extBtn.className = 'ctrl-btn active';
+    extBtn.textContent = 'Extensions';
+    extBtn.addEventListener('click', () => {
+      const isActive = extBtn.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['ek-yapi-fill','ek-yapi-line'].forEach(id => { try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {} });
+    });
+    tr.appendChild(extBtn);
+
+    // Separator
+    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
+
+    // Outbuildings toggle
+    const outBtn = document.createElement('button');
+    outBtn.className = 'ctrl-btn active';
+    outBtn.textContent = 'Outbuildings';
+    outBtn.addEventListener('click', () => {
+      const isActive = outBtn.classList.toggle('active');
+      const vis = isActive ? 'visible' : 'none';
+      ['mustemilat-fill','mustemilat-line'].forEach(id => { try { this.map.setLayoutProperty(id, 'visibility', vis); } catch(_) {} });
+    });
+    tr.appendChild(outBtn);
 
     // Separator
     tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
@@ -526,54 +577,49 @@ const MapModule = {
     // Separator
     tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
 
-    // Ortofoto toggle
-    const ortoBtn = document.createElement('button');
-    ortoBtn.className = 'ctrl-btn';
-    ortoBtn.textContent = 'Ortofoto';
-    ortoBtn.addEventListener('click', () => {
-      const isActive = ortoBtn.classList.toggle('active');
-      try { this.map.setLayoutProperty('ortofoto-layer', 'visibility', isActive ? 'visible' : 'none'); } catch(_) {}
+    // Basemap dropdown
+    const allBasemapIds = ['carto-layer','satellite-layer','ortofoto-layer','ortofoto1956-layer','koruma-imar-layer'];
+    const bmSel = document.createElement('select');
+    bmSel.className = 'ctrl-select';
+    [
+      { id:'carto-layer',         label:'Map' },
+      { id:'satellite-layer',     label:'Satellite' },
+      { id:'ortofoto-layer',      label:'1971 Ortofoto' },
+      { id:'ortofoto1956-layer',  label:'1956 Ortofoto' },
+      { id:'koruma-imar-layer',   label:'Koruma İmar' },
+    ].forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.label;
+      bmSel.appendChild(opt);
     });
-    tr.appendChild(ortoBtn);
-
-    // Separator
-    tr.appendChild(Object.assign(document.createElement('span'), { className: 'ctrl-sep' }));
-
-    // Basemap toggle
-    const cartoBtn  = document.createElement('button');
-    const satBtn    = document.createElement('button');
-    cartoBtn.className = 'ctrl-btn active'; cartoBtn.textContent = 'Map';
-    satBtn.className   = 'ctrl-btn';        satBtn.textContent   = 'Satellite';
-    [cartoBtn, satBtn].forEach(btn => {
-      btn.addEventListener('click', () => {
-        cartoBtn.classList.toggle('active', btn === cartoBtn);
-        satBtn.classList.toggle('active',   btn === satBtn);
-        this.map.setLayoutProperty('carto-layer',     'visibility', btn === cartoBtn  ? 'visible' : 'none');
-        this.map.setLayoutProperty('satellite-layer', 'visibility', btn === satBtn    ? 'visible' : 'none');
-        // Satellite'te yapıadası çizgisi beyaz, Map'te kırmızı
-        const adaColor = btn === satBtn ? '#ffffff' : '#e63946';
-        try { this.map.setPaintProperty('yapiadasi-line', 'line-color', adaColor); } catch(_) {}
-        try { this.map.setPaintProperty('yapiadasi-label', 'text-color', btn === satBtn ? '#ffffff' : '#c1121f'); } catch(_) {}
-        try { this.map.setPaintProperty('yapiadasi-label', 'text-halo-color', btn === satBtn ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,1)'); } catch(_) {}
+    bmSel.value = 'carto-layer';
+    bmSel.addEventListener('change', () => {
+      const active = bmSel.value;
+      allBasemapIds.forEach(id => {
+        try { this.map.setLayoutProperty(id, 'visibility', id === active ? 'visible' : 'none'); } catch(_) {}
       });
-      tr.appendChild(btn);
+      const isDark = active !== 'carto-layer';
+      const adaColor = isDark ? '#ffffff' : '#e63946';
+      try { this.map.setPaintProperty('yapiadasi-line', 'line-color', adaColor); } catch(_) {}
+      try { this.map.setPaintProperty('yapiadasi-label', 'text-color', isDark ? '#ffffff' : '#c1121f'); } catch(_) {}
+      try { this.map.setPaintProperty('yapiadasi-label', 'text-halo-color', isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,1)'); } catch(_) {}
+      const hhColor = isDark ? '#1a237e' : '#1a1a1a';
+      try { this.map.setPaintProperty('halihazir-line', 'line-color', hhColor); } catch(_) {}
+      try { this.map.setPaintProperty('halihazir-glow', 'line-opacity', isDark ? 0.4 : 0); } catch(_) {}
+      const fillColor = isDark ? '#ffeb3b' : '#d4a574';
+      try { this.map.setPaintProperty('all-fill', 'fill-color', fillColor); } catch(_) {}
     });
+    tr.appendChild(bmSel);
 
     // Color mode — alt sağ (değişmedi)
-    const oc = c.querySelector('.color-toggle'); if(oc) oc.remove();
-    const ct = document.createElement('div'); ct.className = 'color-toggle';
-    ct.innerHTML = `<button data-cm="cv" class="cm-btn active">Heritage</button>
-                    <button data-cm="cs" class="cm-btn">Condition</button>`;
-    c.appendChild(ct);
-    ct.addEventListener('click', e => {
-      const btn = e.target.closest('.cm-btn'); if(!btn) return;
-      this._colorMode = btn.dataset.cm;
-      ct.querySelectorAll('.cm-btn').forEach(b => b.classList.toggle('active', b===btn));
-      this.refreshDisplay(App.state.activeFilterIds || null);
-      this.renderLegend(this._colorMode);
-    });
+    this.renderLegend();
 
-    this.renderLegend('cv');
+    // Başlangıç visibility
+    ['halihazir-line', 'halihazir-glow',
+     'kayip-yapi-fill','kayip-yapi-line',
+     'ek-yapi-fill','ek-yapi-line',
+     'mustemilat-fill','mustemilat-line'
+    ].forEach(id => { try { this.map.setLayoutProperty(id, 'visibility', 'visible'); } catch(_) {} });
 
     // Reset / tüm haritayı gör butonu
     const or = c.querySelector('.map-reset-btn'); if(or) or.remove();

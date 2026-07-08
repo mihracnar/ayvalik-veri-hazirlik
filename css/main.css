@@ -1180,3 +1180,35 @@ main {
   background: var(--border-soft);
   flex-shrink: 0;
 }
+
+/* ── Legend line swatch ─────────────────────────────────────── */
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  margin-right: 6px;
+  flex-shrink: 0;
+  align-self: center;
+}
+.legend-sep {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 4px 0;
+}
+
+/* ── Basemap dropdown ────────────────────────────────────────── */
+.ctrl-select {
+  background: white;
+  border: none;
+  border-left: 1px solid var(--border-soft);
+  padding: 0 8px;
+  height: 32px;
+  font-size: 12px;
+  font-family: 'Public Sans', sans-serif;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  border-radius: 0 6px 6px 0;
+}
+.ctrl-select:hover { background: var(--tint); }
