@@ -75,7 +75,7 @@ const MapModule = {
 
     m.addSource('koruma_imar', {
       type: 'raster',
-      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/koruma_imar/tiles/{z}/{x}/{y}.png'],
+      tiles: [location.origin + location.pathname.replace(/\/[^/]*$/, '') + '/data/sit/tiles/{z}/{x}/{y}.png'],
       tileSize: 256, scheme: 'tms',
       attribution: '© Koruma İmar Planı'
     });
