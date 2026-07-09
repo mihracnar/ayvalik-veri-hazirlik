@@ -1,1 +1,7 @@
 data/sit/tiles/
+*.tif
+*.ovr
+*.aux.xml
+*.tfw
+*.mbtiles
+*.pmtiles
