@@ -598,7 +598,7 @@ const MapModule = {
       allBasemapIds.forEach(id => {
         try { this.map.setLayoutProperty(id, 'visibility', id === active ? 'visible' : 'none'); } catch(_) {}
       });
-      const isDark = active !== 'carto-layer';
+      const isDark = active === 'satellite-layer' || active === 'ortofoto-layer' || active === 'ortofoto1956-layer';
       const adaColor = isDark ? '#ffffff' : '#e63946';
       try { this.map.setPaintProperty('yapiadasi-line', 'line-color', adaColor); } catch(_) {}
       try { this.map.setPaintProperty('yapiadasi-label', 'text-color', isDark ? '#ffffff' : '#c1121f'); } catch(_) {}
