@@ -1,5 +1,7 @@
-data/ortofoto/*.tif
-data/ortofoto/*.tfw
-data/ortofoto/*.aux.xml
-data/ortofoto/*.ovr
-data/ortofoto/*.mbtiles
+.DS_Store
+*.tif
+*.tfw
+*.aux.xml
+*.ovr
+*.mbtiles
+*.pmtiles
