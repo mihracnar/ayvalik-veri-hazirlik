@@ -26,9 +26,8 @@ const MapModule = {
         sources: {
           carto: {
             type: 'raster',
-            tiles: ['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-                    'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],
-            tileSize: 256, maxzoom: 19, attribution: '© CARTO © OpenStreetMap'
+            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256, maxzoom: 16, attribution: '© Esri'
           },
           satellite: {
             type: 'raster',

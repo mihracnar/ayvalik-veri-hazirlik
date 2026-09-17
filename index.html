@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Building Inventory — Ayvalık</title>
 <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Public+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -10,6 +11,405 @@
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+
+<!-- ============================================================
+     Erişim ekranı — parola hash'ini üretmek için konsola yapıştır:
+
+     crypto.subtle.digest('SHA-256', new TextEncoder().encode('PAROLAN'))
+       .then(b => console.log([...new Uint8Array(b)]
+         .map(x => x.toString(16).padStart(2,'0')).join('')));
+
+     Çıkan 64 karakteri aşağıdaki PAROLA_HASH'e yaz.
+     ============================================================ -->
+<div id="gate" hidden>
+  <div class="gate-dust" id="gate-dust" aria-hidden="true"></div>
+
+  <div class="gate-panel">
+
+    <div class="facade" aria-hidden="true">
+      <svg viewBox="0 0 200 212">
+
+        <!-- kapı ışığı — çizim bitince yanıyor -->
+        <path class="door-light" d="M87 190 V156 A13 13 0 0 1 113 156 V190 Z"/>
+
+        <!-- zemin -->
+        <path pathLength="1" style="--dl:.00s" d="M8 190 H192"/>
+
+        <!-- gövde -->
+        <path pathLength="1" style="--dl:.18s" d="M35 190 V48"/>
+        <path pathLength="1" style="--dl:.26s" d="M165 190 V48"/>
+
+        <!-- saçak ve alınlık -->
+        <path pathLength="1" style="--dl:.46s" d="M26 48 H174"/>
+        <path pathLength="1" class="detail" style="--dl:.54s" d="M29 42 H171"/>
+        <path pathLength="1" style="--dl:.66s" d="M76 42 L100 24 L124 42"/>
+        <path pathLength="1" class="detail" style="--dl:.78s" d="M138 42 V26 H150 V42"/>
+
+        <!-- kat silmesi -->
+        <path pathLength="1" style="--dl:.92s" d="M35 118 H165"/>
+        <path pathLength="1" class="detail" style="--dl:.98s" d="M35 121.5 H165"/>
+
+        <!-- üst kat pencereleri -->
+        <path pathLength="1" style="--dl:1.10s" d="M47 108 V76 A11 11 0 0 1 69 76 V108 Z"/>
+        <path pathLength="1" style="--dl:1.20s" d="M89 108 V76 A11 11 0 0 1 111 76 V108 Z"/>
+        <path pathLength="1" style="--dl:1.30s" d="M131 108 V76 A11 11 0 0 1 153 76 V108 Z"/>
+        <path pathLength="1" class="detail" style="--dl:1.40s" d="M100 108 V65"/>
+        <path pathLength="1" class="detail" style="--dl:1.44s" d="M89 90 H111"/>
+
+        <!-- balkon -->
+        <path pathLength="1" style="--dl:1.54s" d="M82 110 H118"/>
+        <path pathLength="1" class="detail" style="--dl:1.60s" d="M84 100 H116"/>
+        <path pathLength="1" class="detail" style="--dl:1.66s" d="M84 100 V110 M92 100 V110 M100 100 V110 M108 100 V110 M116 100 V110"/>
+
+        <!-- zemin kat pencereleri -->
+        <path pathLength="1" style="--dl:1.76s" d="M47 176 V142 H69 V176 Z"/>
+        <path pathLength="1" class="detail" style="--dl:1.82s" d="M44 138 H72"/>
+        <path pathLength="1" style="--dl:1.88s" d="M131 176 V142 H153 V176 Z"/>
+        <path pathLength="1" class="detail" style="--dl:1.94s" d="M128 138 H156"/>
+
+        <!-- kapı -->
+        <path pathLength="1" class="door" style="--dl:2.04s" d="M87 190 V156 A13 13 0 0 1 113 156 V190"/>
+        <path pathLength="1" class="detail" style="--dl:2.16s" d="M87 156 H113"/>
+        <path pathLength="1" class="detail" style="--dl:2.22s" d="M100 156 V190"/>
+        <path pathLength="1" class="detail" style="--dl:2.28s" d="M80 190 H120 M76 194 H124"/>
+
+        <!-- ölçü çizgileri -->
+        <path pathLength="1" class="thin" style="--dl:2.40s" d="M20 48 V190"/>
+        <path pathLength="1" class="thin" style="--dl:2.48s" d="M16 48 H24 M16 190 H24"/>
+        <path pathLength="1" class="thin" style="--dl:2.54s" d="M35 202 H165"/>
+        <path pathLength="1" class="thin" style="--dl:2.60s" d="M35 198 V206 M165 198 V206"/>
+      </svg>
+      <span class="flare"></span>
+    </div>
+
+    <p class="sheet-line">South elevation · 1:50</p>
+
+    <h1>Building <em>Inventory</em></h1>
+    <span class="gate-sub">Ayvalık</span>
+    <p class="gate-note">The survey is still in the field. Enter the word to open the door.</p>
+
+    <div class="gate-row">
+      <input type="password" id="gate-input" autocomplete="off" spellcheck="false"
+             placeholder="· · · · · ·" aria-label="Access code">
+      <button type="button" id="gate-btn">Open</button>
+    </div>
+
+    <p class="gate-error" id="gate-error" role="alert" hidden>The door stays shut. Try again.</p>
+  </div>
+</div>
+
+<style>
+  #gate {
+    --g-ink:   #10141500;
+    --g-line:  #d8cdb8;
+    --g-lamp:  #e0a94a;
+    --g-muted: #7d8179;
+    --g-rust:  #b4604a;
+
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    overflow: hidden;
+    background:
+      repeating-linear-gradient(0deg,  rgba(216,205,184,.045) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(90deg, rgba(216,205,184,.045) 0 1px, transparent 1px 26px),
+      radial-gradient(ellipse 65% 55% at 50% 52%, #1b2022 0%, #0d1012 68%);
+    color: var(--g-line);
+    font-family: "Public Sans", system-ui, sans-serif;
+  }
+  #gate[hidden] { display: none; }
+
+  /* ---- havada asılı toz ---- */
+  .gate-dust { position: absolute; inset: 0; pointer-events: none; }
+  .gate-dust span {
+    position: absolute;
+    bottom: -6%;
+    width: 2px; height: 2px;
+    border-radius: 50%;
+    background: var(--g-lamp);
+    opacity: 0;
+    animation: gate-mote var(--d, 16s) linear var(--delay, 0s) infinite;
+  }
+  @keyframes gate-mote {
+    0%   { opacity: 0;   transform: translate(0, 0) scale(var(--s, 1)); }
+    14%  { opacity: .4; }
+    82%  { opacity: .18; }
+    100% { opacity: 0;   transform: translate(var(--x, 0), -108vh) scale(var(--s, 1)); }
+  }
+
+  /* ---- cephe rölövesi ---- */
+  .facade {
+    position: relative;
+    width: clamp(150px, 42vw, 208px);
+    margin: 0 auto 1rem;
+  }
+  .facade svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+  .facade path {
+    fill: none;
+    stroke: var(--g-line);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: gate-draw .8s cubic-bezier(.4,0,.2,1) var(--dl, 0s) forwards;
+  }
+  .facade path.detail { stroke-width: .9; opacity: .75; }
+  .facade path.thin   { stroke-width: .7; opacity: .4; }
+  @keyframes gate-draw { to { stroke-dashoffset: 0; } }
+
+  .facade .door-light {
+    fill: var(--g-lamp);
+    stroke: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    opacity: 0;
+    animation: gate-lamp 6s ease-in-out 3.1s infinite;
+  }
+  @keyframes gate-lamp {
+    0%, 100% { opacity: .10; }
+    50%      { opacity: .26; }
+  }
+
+  .facade .flare {
+    position: absolute;
+    left: 50%; top: 82%;
+    width: 40px; height: 40px;
+    margin: -20px 0 0 -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(240,200,130,.95) 0%, rgba(224,169,74,.5) 40%, transparent 72%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---- yazı ---- */
+  .gate-panel { width: 100%; max-width: 26rem; text-align: center; }
+
+  .sheet-line {
+    margin: 0 0 2rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .64rem;
+    letter-spacing: .09em;
+    color: var(--g-muted);
+    opacity: 0;
+    animation: gate-fade .9s ease 2.7s forwards;
+  }
+
+  .gate-panel h1 {
+    margin: 0;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: clamp(1.5rem, 5vw, 2.1rem);
+    font-weight: 300;
+    line-height: 1.15;
+  }
+  .gate-panel h1 em { font-style: italic; }
+
+  .gate-sub {
+    display: block;
+    margin-top: .45rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .68rem;
+    letter-spacing: .12em;
+    color: var(--g-muted);
+  }
+  .gate-note {
+    margin: 1.4rem auto 1.3rem;
+    max-width: 32ch;
+    font-size: .9rem;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--g-muted);
+  }
+
+  .gate-row { display: flex; gap: .5rem; }
+
+  #gate-input {
+    flex: 1;
+    min-width: 0;
+    padding: .72rem .9rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .95rem;
+    letter-spacing: .22em;
+    text-align: center;
+    color: var(--g-line);
+    background: rgba(216,205,184,.035);
+    border: 1px solid rgba(216,205,184,.22);
+    border-radius: 2px;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  #gate-input::placeholder { color: var(--g-muted); letter-spacing: .2em; }
+  #gate-input:focus {
+    outline: none;
+    border-color: rgba(224,169,74,.65);
+    box-shadow: 0 0 22px -6px rgba(224,169,74,.5);
+  }
+
+  #gate-btn {
+    padding: .72rem 1.5rem;
+    font: 500 .9rem/1 "Public Sans", system-ui, sans-serif;
+    letter-spacing: .04em;
+    color: #14181a;
+    background: var(--g-lamp);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: filter .25s;
+  }
+  #gate-btn:hover { filter: brightness(1.12); }
+  #gate-input:focus-visible, #gate-btn:focus-visible {
+    outline: 2px solid var(--g-lamp);
+    outline-offset: 3px;
+  }
+
+  .gate-error {
+    margin: 1.1rem 0 0;
+    font-size: .85rem;
+    color: var(--g-rust);
+    animation: gate-fade .4s ease both;
+  }
+  .gate-error[hidden] { display: none; }
+  @keyframes gate-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ---- yanlış parola ---- */
+  #gate.denied .facade { animation: gate-judder .5s cubic-bezier(.36,.07,.19,.97); }
+  #gate.denied .facade path.door { stroke: var(--g-rust); }
+  @keyframes gate-judder {
+    0%, 100%      { transform: translateX(0); }
+    15%, 45%, 75% { transform: translateX(-6px); }
+    30%, 60%, 90% { transform: translateX(6px); }
+  }
+
+  /* ---- kapı açılıyor ---- */
+  #gate.opening { animation: gate-exit 1.6s cubic-bezier(.45,0,.7,0) forwards; }
+  @keyframes gate-exit {
+    0%, 55%  { opacity: 1; transform: scale(1);    filter: blur(0); }
+    100%     { opacity: 0; transform: scale(1.12); filter: blur(8px); }
+  }
+
+  #gate.opening .facade .door-light {
+    animation: gate-open 1.1s cubic-bezier(.3,0,.2,1) forwards;
+  }
+  @keyframes gate-open {
+    0%   { opacity: .2; }
+    30%  { opacity: 1; }
+    100% { opacity: 1; }
+  }
+
+  #gate.opening .facade .flare {
+    animation: gate-spill 1.5s cubic-bezier(.3,0,.15,1) .18s forwards;
+  }
+  @keyframes gate-spill {
+    0%   { opacity: 0;  transform: scale(.4); }
+    22%  { opacity: .9; }
+    100% { opacity: 1;  transform: scale(46); }
+  }
+
+  #gate.opening .facade path:not(.door-light) {
+    animation: gate-dim .8s ease .3s forwards;
+  }
+  @keyframes gate-dim { to { opacity: 0; } }
+
+  #gate.opening .sheet-line,
+  #gate.opening .gate-panel h1,
+  #gate.opening .gate-sub,
+  #gate.opening .gate-note,
+  #gate.opening .gate-row { animation: gate-dim .5s ease forwards; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #gate .facade path,
+    #gate .facade .door-light,
+    #gate .sheet-line,
+    #gate .gate-dust span,
+    #gate .facade .flare { animation: none !important; }
+    #gate .facade path { stroke-dashoffset: 0 !important; }
+    #gate .facade .door-light { opacity: .18 !important; }
+    #gate .sheet-line { opacity: 1 !important; }
+    #gate.opening { animation: gate-fade .3s reverse forwards; }
+  }
+</style>
+
+<script>
+(function () {
+  var PAROLA_HASH = "d1002398b1db28dca2378e30f8b31b4f4ce191283b9df4679b8b6f8569db1dfd";
+
+  var ANAHTAR = "ayvalik-gate";
+  var gate  = document.getElementById("gate");
+  var input = document.getElementById("gate-input");
+  var btn   = document.getElementById("gate-btn");
+  var hata  = document.getElementById("gate-error");
+  var dust  = document.getElementById("gate-dust");
+
+  if (sessionStorage.getItem(ANAHTAR) === PAROLA_HASH) return;
+
+  var sakin = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  gate.hidden = false;
+  document.documentElement.style.overflow = "hidden";
+  input.focus();
+
+  if (!sakin) {
+    for (var i = 0; i < 14; i++) {
+      var m = document.createElement("span");
+      m.style.left = (Math.random() * 100).toFixed(1) + "%";
+      m.style.setProperty("--d",     (13 + Math.random() * 13).toFixed(1) + "s");
+      m.style.setProperty("--delay", (-Math.random() * 20).toFixed(1) + "s");
+      m.style.setProperty("--x",     (Math.random() * 70 - 35).toFixed(0) + "px");
+      m.style.setProperty("--s",     (0.8 + Math.random() * 1.6).toFixed(2));
+      dust.appendChild(m);
+    }
+  }
+
+  function hashle(metin) {
+    return crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(metin))
+      .then(function (buf) {
+        return Array.from(new Uint8Array(buf))
+          .map(function (b) { return b.toString(16).padStart(2, "0"); })
+          .join("");
+      });
+  }
+
+  var mesgul = false;
+
+  function dene() {
+    if (mesgul || !input.value) return;
+    mesgul = true;
+
+    hashle(input.value).then(function (h) {
+      if (h === PAROLA_HASH) {
+        sessionStorage.setItem(ANAHTAR, h);
+        hata.hidden = true;
+        input.blur();
+        gate.classList.add("opening");
+        setTimeout(function () {
+          gate.remove();
+          document.documentElement.style.overflow = "";
+          window.dispatchEvent(new Event("resize")); // harita tuvali yeniden ölçsün
+        }, sakin ? 320 : 1600);
+      } else {
+        hata.hidden = false;
+        input.value = "";
+        gate.classList.add("denied");
+        setTimeout(function () {
+          gate.classList.remove("denied");
+          input.focus();
+          mesgul = false;
+        }, 520);
+      }
+    });
+  }
+
+  btn.addEventListener("click", dene);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") dene();
+  });
+})();
+</script>
+
 
 <header class="topbar">
   <div class="topbar-inner">
